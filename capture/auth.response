@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+CONTENT-LENGTH: 435
+CONTENT-TYPE: text/xml; charset="UTF-8"
+SERVER: "OS/version" UPnP/1.0 "product/version"
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope
+        xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+        soap-env:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+        >
+<soap-env:Body>
+    <m:AuthenticateResponse
+        xmlns:m="urn:NETGEAT-ROUTER:service:ParentalControl:1">
+    </m:AuthenticateResponse>
+    <ResponseCode>000</ResponseCode>
+</soap-env:Body>
+</soap-env:Envelope>

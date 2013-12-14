@@ -1,0 +1,23 @@
+POST /soap/server_sa/ HTTP/1.1
+Accept: text/xml
+SOAPAction: "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
+Cache-Control: no-cache
+Pragma: no-cache
+Accept-Encoding: gzip
+Accept-Language: zh-CN,en,*
+Content-type: application/x-java-serialized-object
+Content-Length: 539
+User-Agent: Dalvik/2.0.0 (Linux; U; Android 4.4.2; Nexus 5 Build/KOT49H)
+Host: routerlogin.net:5000
+Connection: Keep-Alive
+
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>A7D88AE69687E58D9A00</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:GetAttachDevice xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
+</M1:GetAttachDevice>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

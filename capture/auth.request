@@ -1,0 +1,25 @@
+POST /soap/server_sa/ HTTP/1.1
+Accept: text/xml
+SOAPAction: "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
+Cache-Control: no-cache
+Pragma: no-cache
+Accept-Encoding: gzip
+Accept-Language: zh-CN,en,*
+Content-type: application/x-java-serialized-object
+Content-Length: 444
+User-Agent: Dalvik/2.0.0 (Linux; U; Android 4.4.2; Nexus 5 Build/KOT49H)
+Host: routerlogin.net:5000
+Connection: Keep-Alive
+
+<?xml version="1.0" encoding="utf-8" ?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID xsi:type="xsd:string" xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">A7D88AE69687E58D9A00</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<Authenticate>
+  <NewUsername>admin</NewUsername>
+  <NewPassword>MY_SECRET_PASSWORD</NewPassword>
+</Authenticate>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

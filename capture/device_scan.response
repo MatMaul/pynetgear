@@ -1,0 +1,18 @@
+HTTP/1.1 200 OK
+CONTENT-LENGTH: 920
+CONTENT-TYPE: text/xml; charset="UTF-8"
+SERVER: "OS/version" UPnP/1.0 "product/version"
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope
+        xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+        soap-env:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+        >
+<soap-env:Body>
+    <m:GetAttachDeviceResponse
+        xmlns:m="urn:NETGEAT-ROUTER:service:DeviceInfo:1">
+        <NewAttachDevice>7@1;192.168.1.2;android-ada682e3ff4d6b20;10:68:3F:AA:AA:AA;wireless;72;88@2;192.168.1.3;odin;C8:9C:DC:AA:AA:AA;wired;;100@3;192.168.1.4;Philips-hue;00:17:88:AA:AA:AA;wired;;100@4;192.168.1.5;android-e948fcdcfcf326b;AC:22:0B:AA:AA:AA;wireless;150;72@5;192.168.1.7;android-7ae1452d7d9dcb52;BC:F5:AC:AA:AA:AA;wireless;433;83@6;192.168.1.8;Pauluss-MBP;14:10:9F:AA:AA:AA;wireless;1;100@7;192.168.1.9;Chromecast;D0:E7:82:AA:AA:AA;wireless;72;100</NewAttachDevice>
+    </m:GetAttachDeviceResponse>
+    <ResponseCode>000</ResponseCode>
+</soap-env:Body>
+</soap-env:Envelope>
