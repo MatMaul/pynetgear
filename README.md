@@ -5,10 +5,10 @@ pyNetgear provides an API for your Netgear router. It uses the SOAP-api on moder
 
 It currently supports the following operations:
  
-*login*
+**login**<br>
 Logs in to the router. Will return True or False to indicate success.
 
-*get_attached_devices*
+**get_attached_devices**<br>
 Returns a list of named tuples describing the device signal, ip, name, mac, type and link_rate 
 
 Usage
@@ -17,10 +17,12 @@ To test run from the console:
 `$ python pynetgear.py <host> <user> <pass>`
 
 To use within your Python scripts:
-`netgear = Netgear(host, username, password)
+```python
+netgear = Netgear(host, username, password)
 
 for i in netgear.get_attached_devices():
-    print i`
+    print i
+```
 
 Supported routers
 -----------------
