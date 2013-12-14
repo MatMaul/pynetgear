@@ -1,7 +1,7 @@
 pyNetgear
 ==============
 
-pyNetgear provides an API for your Netgear router. It uses the SOAP-api on modern Netgear routers. It is built by reverse engineering the requests made by the (NETGEAR Genie app)[https://play.google.com/store/apps/details?id=com.dragonflow] to the SOAP-api of the router.
+pyNetgear provides an easy to use Python API to control your Netgear router. It uses the SOAP-api on modern Netgear routers to communicate. It is built by reverse engineering the requests made by the [NETGEAR Genie app](https://play.google.com/store/apps/details?id=com.dragonflow).
 
 It currently supports the following operations:
  
