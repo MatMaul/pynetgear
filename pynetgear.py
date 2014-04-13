@@ -1,3 +1,4 @@
+from __future__ import print_function
 import requests
 import re
 from collections import namedtuple
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) != 4:
-        print "To test: python pynetgear.py <host> <user> <pass>"
+        print("To test: python pynetgear.py <host> <user> <pass>")
         exit()
 
     host = sys.argv[1]
@@ -135,6 +136,6 @@ if __name__ == "__main__":
     netgear = Netgear(host, username, password)
 
     for i in netgear.get_attached_devices():
-        print i
+        print(i)
 
 
