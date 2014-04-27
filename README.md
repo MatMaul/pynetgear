@@ -13,6 +13,11 @@ Logs in to the router. Will return True or False to indicate success.
 **get_attached_devices**<br>
 Returns a list of named tuples describing the device signal, ip, name, mac, type and link_rate 
 
+Dependencies
+------------
+
+PyNetgear depends on the Python packages requests. Make sure you have these dependencies installed using `pip install -r requirements.txt`
+
 Usage
 -----
 To test run from the console:
