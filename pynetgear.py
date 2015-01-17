@@ -84,7 +84,7 @@ class Netgear(object):
 
         try:
             req = requests.post(
-                self.soap_url, headers=headers, data=message, timeout=3)
+                self.soap_url, headers=headers, data=message, timeout=10)
 
             success = _is_valid_response(req)
 
@@ -92,7 +92,7 @@ class Netgear(object):
                 self.login()
 
                 req = requests.post(
-                    self.soap_url, headers=headers, data=message, timeout=3)
+                    self.soap_url, headers=headers, data=message, timeout=10)
 
                 success = _is_valid_response(req)
 
