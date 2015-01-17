@@ -1,11 +1,22 @@
+"""
+Module to communicate with Netgear routers using the SOAP v2 API.
+"""
 from __future__ import print_function
-import requests
+
 import re
 from collections import namedtuple
+import logging
 
-Device = namedtuple("Device", ["signal","ip","name","mac","type","link_rate"])
+import requests
+
+_LOGGER = logging.getLogger(__name__)
+
+Device = namedtuple(
+    "Device", ["signal", "ip", "name", "mac", "type", "link_rate"])
+
 
 class Netgear(object):
+    """ Represents a Netgear Router. """
 
     def __init__(self, host, username, password):
         self.soap_url = "http://{}:5000/soap/server_sa/".format(host)
@@ -14,70 +25,82 @@ class Netgear(object):
         self.logged_in = False
 
     def login(self):
+        """
+        Login to the router. Will be called automatically by other actions.
+        """
+        _LOGGER.info("Login")
+
         message = SOAP_LOGIN.format(session_id=SESSION_ID,
                                     username=self.username,
                                     password=self.password)
 
-        success, response = self._make_request(ACTION_LOGIN,
-                                               message, False)
+        success, response = self._make_request(
+            ACTION_LOGIN, message, False)
 
         self.logged_in = success
 
         return self.logged_in
 
     def get_attached_devices(self):
-        """ Returns a list of devices. """
-        if not self.logged_in:
-            self.login()
+        """
+        Returns a list of devices.
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Get attached devices")
 
         message = SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID)
 
-        success, response = \
-            self._make_request(ACTION_GET_ATTACHED_DEVICES, message)
+        success, response = self._make_request(
+            ACTION_GET_ATTACHED_DEVICES, message)
 
-        if success:
-            data = re.search(r"<NewAttachDevice>(.*)</NewAttachDevice>",
-                             response).group(1).split(";")
+        if not success:
+            return None
 
-            devices = []
+        data = re.search(r"<NewAttachDevice>(.*)</NewAttachDevice>",
+                         response).group(1).split(";")
 
-            # len(data)-1 because the last element is not used
-            for i in range(0, len(data)-1, 6):
-                signal = int(data[i].split("@")[0])
-                link_rate = int(data[i+5]) if data[i+5] else None
+        devices = []
 
-                atts = [signal] + data[i+1:i+5] + [link_rate]
+        # len(data)-1 because the last element is not used
+        for i in range(0, len(data)-1, 6):
+            signal = int(data[i].split("@")[0])
+            link_rate = int(data[i+5]) if data[i+5] else None
 
-                devices.append(Device(*atts))
+            atts = [signal] + data[i+1:i+5] + [link_rate]
 
-            return devices
+            devices.append(Device(*atts))
 
-        else:
-            return []
-
+        return devices
 
     def _make_request(self, action, message, try_login_after_failure=True):
+        """ Make an API request to the router. """
+
+        # If we are not logged in, the request will fail for sure.
+        if not self.logged_in and try_login_after_failure:
+            if not self.login():
+                return False, ""
+
         headers = _get_soap_header(action)
 
         try:
-            req = requests.post(self.soap_url,
-                                headers=headers,
-                                data=message,
-                                timeout=3)
+            req = requests.post(
+                self.soap_url, headers=headers, data=message, timeout=3)
 
             success = _is_valid_response(req)
 
             if not success and try_login_after_failure:
                 self.login()
 
-                req = requests.post(self.soap_url,
-                                    headers=headers,
-                                    data=message,
-                                    timeout=3)
+                req = requests.post(
+                    self.soap_url, headers=headers, data=message, timeout=3)
 
-            return _is_valid_response(req), req.text
+                success = _is_valid_response(req)
+
+            return success, req.text
 
         except requests.exceptions.RequestException:
+            _LOGGER.exception("Error talking to API")
+
             # Maybe one day we will distinguish between
             # different errors..
             return False, ""
@@ -86,8 +109,9 @@ class Netgear(object):
 def _get_soap_header(action):
     return {"SOAPAction": action}
 
+
 def _is_valid_response(resp):
-    return (resp.status_code == 200 and 
+    return (resp.status_code == 200 and
             "<ResponseCode>000</ResponseCode>" in resp.text)
 
 
@@ -127,15 +151,19 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 4:
         print("To test: python pynetgear.py <host> <user> <pass>")
-        exit()
+        sys.exit()
 
-    host = sys.argv[1]
-    username = sys.argv[2]
-    password = sys.argv[3]
+    logging.basicConfig(level=logging.INFO)
+
+    host, username, password = sys.argv[1:]
 
     netgear = Netgear(host, username, password)
 
-    for i in netgear.get_attached_devices():
-        print(i)
+    devices = netgear.get_attached_devices()
 
+    if devices is None:
+        print("Error communicating with the Netgear router")
 
+    else:
+        for i in netgear.get_attached_devices():
+            print(i)
