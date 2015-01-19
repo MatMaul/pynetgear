@@ -34,7 +34,7 @@ class Netgear(object):
                                     username=self.username,
                                     password=self.password)
 
-        success, response = self._make_request(
+        success, _ = self._make_request(
             ACTION_LOGIN, message, False)
 
         self.logged_in = success
@@ -61,14 +61,21 @@ class Netgear(object):
 
         devices = []
 
-        # len(data)-1 because the last element is not used
-        for i in range(0, len(data)-1, 6):
-            signal = int(data[i].split("@")[0])
-            link_rate = int(data[i+5]) if data[i+5] else None
+        device_start = [index for index, value in enumerate(data)
+                        if '@' in value]
 
-            atts = [signal] + data[i+1:i+5] + [link_rate]
+        for index, start in enumerate(device_start):
+            try:
+                info = data[start:device_start[index+1]]
+            except IndexError:
+                # The last device, ignore the last element
+                info = data[start:-1]
 
-            devices.append(Device(*atts))
+            signal = convert(info[0].split("@")[0], int)
+            ip, name, mac, link_type = info[1:5]
+            link_rate = convert(info[-1], int)
+
+            devices.append(Device(signal, ip, name, mac, link_type, link_rate))
 
         return devices
 
@@ -115,6 +122,15 @@ def _is_valid_response(resp):
             "<ResponseCode>000</ResponseCode>" in resp.text)
 
 
+def convert(value, to_type, default=None):
+    """ Converts value to to_type, returns default if fails. """
+    try:
+        return default if value is None else to_type(value)
+    except ValueError:
+        # If value could not be converted
+        return default
+
+
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
 ACTION_GET_ATTACHED_DEVICES = "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
 
@@ -146,6 +162,7 @@ SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?
 </SOAP-ENV:Envelope>
 """
 
+
 if __name__ == "__main__":
     import sys
 
@@ -165,5 +182,5 @@ if __name__ == "__main__":
         print("Error communicating with the Netgear router")
 
     else:
-        for i in netgear.get_attached_devices():
+        for i in devices:
             print(i)

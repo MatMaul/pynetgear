@@ -33,25 +33,25 @@ for i in netgear.get_attached_devices():
 
 Supported routers
 -----------------
-It has been tested with the Netgear R6300 router but according to the NETGEAR Genie app description it should support the following routers:
+It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router. According to the NETGEAR Genie app description, the following routers should work:
 
- * R7000
- * R6300
- * R6250
- * R6200
- * R6100
- * Centria (WNDR4700, WND4720)
- * WNDR4500
- * WNDR4300
- * WNDR4000
- * WNDR3800
- * WNDR3700v3
- * WNDR3400v2
- * WNR3500Lv2
- * WNR2200
- * WNR2000v3
- * WNR1500
- * WNR1000v2
- * WNR1000v3
- * WNDRMAC
- * WNR612v2
+ * Netgear R7000
+ * Netgear R6300
+ * Netgear R6250
+ * Netgear R6200
+ * Netgear R6100
+ * Netgear Centria (WNDR4700, WND4720)
+ * Netgear WNDR4500
+ * Netgear WNDR4300
+ * Netgear WNDR4000
+ * Netgear WNDR3800
+ * Netgear WNDR3700v3
+ * Netgear WNDR3400v2
+ * Netgear WNR3500Lv2
+ * Netgear WNR2200
+ * Netgear WNR2000v3
+ * Netgear WNR1500
+ * Netgear WNR1000v2
+ * Netgear WNR1000v3
+ * Netgear WNDRMAC
+ * Netgear WNR612v2
