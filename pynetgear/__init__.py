@@ -9,6 +9,8 @@ import logging
 
 import requests
 
+DEFAULT_HOST = 'routerlogin.net'
+DEFAULT_USER = 'admin'
 _LOGGER = logging.getLogger(__name__)
 
 Device = namedtuple(
@@ -18,11 +20,11 @@ Device = namedtuple(
 class Netgear(object):
     """ Represents a Netgear Router. """
 
-    def __init__(self, host, username, password):
+    def __init__(self, host=DEFAULT_HOST, password=None, user=DEFAULT_USER):
         self.soap_url = "http://{}:5000/soap/server_sa/".format(host)
-        self.username = username
+        self.username = user
         self.password = password
-        self.logged_in = False
+        self.logged_in = host is DEFAULT_HOST
 
     def login(self):
         """
@@ -161,26 +163,3 @@ SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 4:
-        print("To test: python pynetgear.py <host> <user> <pass>")
-        sys.exit()
-
-    logging.basicConfig(level=logging.INFO)
-
-    host, username, password = sys.argv[1:]
-
-    netgear = Netgear(host, username, password)
-
-    devices = netgear.get_attached_devices()
-
-    if devices is None:
-        print("Error communicating with the Netgear router")
-
-    else:
-        for i in devices:
-            print(i)
