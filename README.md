@@ -27,6 +27,7 @@ To test run from the console:
 
 To use within your Python scripts:
 ```python
+# All three parameters are optional
 netgear = Netgear(host, username, password)
 
 for i in netgear.get_attached_devices():
