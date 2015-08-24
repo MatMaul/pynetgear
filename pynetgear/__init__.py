@@ -20,7 +20,7 @@ Device = namedtuple(
 class Netgear(object):
     """ Represents a Netgear Router. """
 
-    def __init__(self, host=DEFAULT_HOST, password=None, user=DEFAULT_USER):
+    def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER):
         self.soap_url = "http://{}:5000/soap/server_sa/".format(host)
         self.username = user
         self.password = password

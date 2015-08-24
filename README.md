@@ -5,7 +5,9 @@ pyNetgear provides an easy to use Python API to control your Netgear router. It 
 
 pyNetgear works with Python 2 and 3.
 
-If you are connected to a Netgear router, it will automatically find the Netgear router and can query it without needing a host, username or password. If you connect using the IP address, you will need a password (username defaults to admin).
+If you are connected to the network of the Netgear router, a host is optional.
+If you are connected via a wired connection to the Netgear router, a password is optional.
+The username defaults to admin.
 
 It currently supports the following operations:
 
@@ -23,12 +25,12 @@ You can install PyNetgear from PyPi using `pip3 install pynetgear` (use `pip` if
 Usage
 -----
 To test run from the console:
-`$ python -m pynetgear [<host>] [<pass>] [<user>]`
+`$ python -m pynetgear [<pass>] [<host>] [<user>]`
 
 To use within your Python scripts:
 ```python
 # All three parameters are optional
-netgear = Netgear(host, username, password)
+netgear = Netgear(password, host, username)
 
 for i in netgear.get_attached_devices():
     print i
