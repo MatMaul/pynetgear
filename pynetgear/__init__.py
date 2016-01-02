@@ -1,6 +1,4 @@
-"""
-Module to communicate with Netgear routers using the SOAP v2 API.
-"""
+"""Module to communicate with Netgear routers using the SOAP v2 API."""
 from __future__ import print_function
 
 import re
@@ -18,9 +16,10 @@ Device = namedtuple(
 
 
 class Netgear(object):
-    """ Represents a Netgear Router. """
+    """Represents a session to a Netgear Router."""
 
     def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER):
+        """Initialize a Netgear session."""
         self.soap_url = "http://{}:5000/soap/server_sa/".format(host)
         self.username = user
         self.password = password
@@ -28,7 +27,9 @@ class Netgear(object):
 
     def login(self):
         """
-        Login to the router. Will be called automatically by other actions.
+        Login to the router.
+
+        Will be called automatically by other actions.
         """
         _LOGGER.info("Login")
 
@@ -45,15 +46,15 @@ class Netgear(object):
 
     def get_attached_devices(self):
         """
-        Returns a list of devices.
+        Return list of connected devices to the router.
+
         Returns None if error occurred.
         """
         _LOGGER.info("Get attached devices")
 
-        message = SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID)
-
         success, response = self._make_request(
-            ACTION_GET_ATTACHED_DEVICES, message)
+            ACTION_GET_ATTACHED_DEVICES,
+            SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID))
 
         if not success:
             return None
@@ -66,34 +67,35 @@ class Netgear(object):
         device_start = [index for index, value in enumerate(data)
                         if '@' in value]
 
-
         for index, start in enumerate(device_start):
             try:
                 info = data[start:device_start[index+1]]
             except IndexError:
                 # The last device, ignore the last element
                 info = data[start:-1]
-            if not info:
-              #lets not process empty lists 
-              continue 
+
+            if len(info) < 4:
+                _LOGGER.warning('Unexpected entry: %s', info)
+                continue
+
             signal = convert(info[0].split("@")[0], int)
-            if len(info) == 4:
-              #if info length here is 4 then link_type is missing from SOAP response proceed accordingly,
-              ip, name, mac = info[1:4]
-              link_type = None 
-              link_rate = 0 
+            ipv4, name, mac = info[1:4]
+
+            # Not all routers will report link type and rate
+            if len(info) >= 6:
+                link_type = info[4]
+                link_rate = convert(info[5], int)
             else:
+                link_type = None
+                link_rate = 0
 
-              ip, name, mac, link_type = info[1:5]
-              link_rate = convert(info[-1], int)
-
-            devices.append(Device(signal, ip, name, mac, link_type, link_rate))
+            devices.append(Device(signal, ipv4, name, mac, link_type,
+                                  link_rate))
 
         return devices
 
     def _make_request(self, action, message, try_login_after_failure=True):
-        """ Make an API request to the router. """
-
+        """Make an API request to the router."""
         # If we are not logged in, the request will fail for sure.
         if not self.logged_in and try_login_after_failure:
             if not self.login():
@@ -135,7 +137,7 @@ def _is_valid_response(resp):
 
 
 def convert(value, to_type, default=None):
-    """ Converts value to to_type, returns default if fails. """
+    """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
     except ValueError:
@@ -144,7 +146,8 @@ def convert(value, to_type, default=None):
 
 
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
-ACTION_GET_ATTACHED_DEVICES = "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
+ACTION_GET_ATTACHED_DEVICES = \
+    "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
 
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
@@ -152,7 +155,8 @@ SESSION_ID = "A7D88AE69687E58D9A00"
 SOAP_LOGIN = """<?xml version="1.0" encoding="utf-8" ?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
 <SOAP-ENV:Header>
-<SessionID xsi:type="xsd:string" xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">{session_id}</SessionID>
+<SessionID xsi:type="xsd:string"
+  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">{session_id}</SessionID>
 </SOAP-ENV:Header>
 <SOAP-ENV:Body>
 <Authenticate>
@@ -163,7 +167,10 @@ SOAP_LOGIN = """<?xml version="1.0" encoding="utf-8" ?>
 </SOAP-ENV:Envelope>"""
 
 SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
 <SOAP-ENV:Header>
 <SessionID>{session_id}</SessionID>
 </SOAP-ENV:Header>
