@@ -66,16 +66,26 @@ class Netgear(object):
         device_start = [index for index, value in enumerate(data)
                         if '@' in value]
 
+
         for index, start in enumerate(device_start):
             try:
                 info = data[start:device_start[index+1]]
             except IndexError:
                 # The last device, ignore the last element
                 info = data[start:-1]
-
+            if not info:
+              #lets not process empty lists 
+              continue 
             signal = convert(info[0].split("@")[0], int)
-            ip, name, mac, link_type = info[1:5]
-            link_rate = convert(info[-1], int)
+            if len(info) == 4:
+              #if info length here is 4 then link_type is missing from SOAP response proceed accordingly,
+              ip, name, mac = info[1:4]
+              link_type = None 
+              link_rate = 0 
+            else:
+
+              ip, name, mac, link_type = info[1:5]
+              link_rate = convert(info[-1], int)
 
             devices.append(Device(signal, ip, name, mac, link_type, link_rate))
 
