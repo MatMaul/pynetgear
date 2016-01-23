@@ -75,6 +75,9 @@ class Netgear(object):
                 info = data[start:-1]
 
             if len(info) < 4:
+                if len(info) == 0:
+                    # don't warn on null lists just continue
+                    continue
                 _LOGGER.warning('Unexpected entry: %s', info)
                 continue
 
