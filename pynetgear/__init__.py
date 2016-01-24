@@ -74,10 +74,10 @@ class Netgear(object):
                 # The last device, ignore the last element
                 info = data[start:-1]
 
-            if len(info) < 4:
-                if len(info) == 0:
-                    # don't warn on null lists just continue
-                    continue
+
+            if len(info) == 0:
+                continue
+            elif len(info) < 4:
                 _LOGGER.warning('Unexpected entry: %s', info)
                 continue
 
