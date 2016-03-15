@@ -74,7 +74,6 @@ class Netgear(object):
                 # The last device, ignore the last element
                 info = data[start:-1]
 
-
             if len(info) == 0:
                 continue
             elif len(info) < 4:
