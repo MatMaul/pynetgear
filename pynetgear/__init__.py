@@ -9,6 +9,7 @@ import requests
 
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
+DEFAULT_PORT = 5000
 _LOGGER = logging.getLogger(__name__)
 
 Device = namedtuple(
@@ -18,11 +19,13 @@ Device = namedtuple(
 class Netgear(object):
     """Represents a session to a Netgear Router."""
 
-    def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER):
+    def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER,
+                 port=DEFAULT_PORT):
         """Initialize a Netgear session."""
-        self.soap_url = "http://{}:5000/soap/server_sa/".format(host)
+        self.soap_url = "http://{}:{}/soap/server_sa/".format(host, port)
         self.username = user
         self.password = password
+        self.port = port
         self.logged_in = host is DEFAULT_HOST
 
     def login(self):

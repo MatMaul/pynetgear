@@ -8,6 +8,7 @@ pyNetgear works with Python 2 and 3.
 If you are connected to the network of the Netgear router, a host is optional.
 If you are connected via a wired connection to the Netgear router, a password is optional.
 The username defaults to admin.
+The port defaults to 5000
 
 It currently supports the following operations:
 
@@ -25,12 +26,12 @@ You can install PyNetgear from PyPi using `pip3 install pynetgear` (use `pip` if
 Usage
 -----
 To test run from the console:
-`$ python -m pynetgear [<pass>] [<host>] [<user>]`
+`$ python -m pynetgear [<pass>] [<host>] [<user>] [<port>]`
 
 To use within your Python scripts:
 ```python
-# All three parameters are optional
-netgear = Netgear(password, host, username)
+# All four parameters are optional
+netgear = Netgear(password, host, username, port)
 
 for i in netgear.get_attached_devices():
     print i
@@ -55,6 +56,7 @@ It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router
  * Netgear WNR3500Lv2
  * Netgear WNR2200
  * Netgear WNR2000v3
+ * Netgear WNR2000v4 (Port 80)
  * Netgear WNR1500
  * Netgear WNR1000v2
  * Netgear WNR1000v3
