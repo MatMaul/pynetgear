@@ -18,6 +18,9 @@ Logs in to the router. Will return True or False to indicate success.
 **get_attached_devices**<br>
 Returns a list of named tuples describing the device signal, ip, name, mac, type and link_rate.
 
+**get_traffic_meter**<br>
+Return a dict containing the traffic meter information from the router (if enabled in the webinterface).
+
 Installation
 ------------
 
