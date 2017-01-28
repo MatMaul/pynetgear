@@ -1,0 +1,11 @@
+POST /soap/server_sa/ HTTP/1.0
+SOAPAction: urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics
+content-type: text/xml;charset=utf-8
+HOST: www.routerlogin.com
+User-Agent: SOAP Toolkit 3.0
+connection: keep-Alive
+Cache-Control: no-cache
+Pragma: no-cache
+content-length: 543
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><SOAP-ENV:Header><SessionID>58DEE6006A88A967E89A</SessionID></SOAP-ENV:Header><SOAP-ENV:Body><M1:GetTrafficMeterStatistics xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics></SOAP-ENV:Body></SOAP-ENV:Envelope>

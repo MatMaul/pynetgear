@@ -1,0 +1,27 @@
+HTTP/1.0 200 OK
+CONTENT-LENGTH: 1361
+CONTENT-TYPE: text/xml; charset="utf-8"
+SERVER: Linux UPnP/1.0
+
+<?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Body>
+    <m:GetTrafficMeterStatisticsResponse xmlns:m="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+      <NewTodayConnectionTime>00:14</NewTodayConnectionTime>
+      <NewTodayUpload>6.19</NewTodayUpload>
+      <NewTodayDownload>209.58</NewTodayDownload>
+      <NewYesterdayConnectionTime>00:00</NewYesterdayConnectionTime>
+      <NewYesterdayUpload>0.00</NewYesterdayUpload>
+      <NewYesterdayDownload>0.00</NewYesterdayDownload>
+      <NewWeekConnectionTime>00:14</NewWeekConnectionTime>
+      <NewWeekUpload>6.19/0.88</NewWeekUpload>
+      <NewWeekDownload>209.58/29.94</NewWeekDownload>
+      <NewMonthConnectionTime>00:14</NewMonthConnectionTime>
+      <NewMonthUpload>6.19/0.20</NewMonthUpload>
+      <NewMonthDownload>209.58/6.76</NewMonthDownload>
+      <NewLastMonthConnectionTime>00:00</NewLastMonthConnectionTime>
+      <NewLastMonthUpload>0.00/0.00</NewLastMonthUpload>
+      <NewLastMonthDownload>0.00/0.00</NewLastMonthDownload>
+    </m:GetTrafficMeterStatisticsResponse>
+    <ResponseCode>000</ResponseCode>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

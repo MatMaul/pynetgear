@@ -4,6 +4,8 @@ from __future__ import print_function
 import re
 from collections import namedtuple
 import logging
+import xml.etree.ElementTree as ET
+from datetime import timedelta
 
 import requests
 
@@ -99,6 +101,45 @@ class Netgear(object):
 
         return devices
 
+    def get_traffic_meter(self):
+        """
+        Return dict of traffic meter stats.
+
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Get traffic meter")
+
+        def parse_text(text):
+            """
+                there are three kinds of values in the returned data
+                This function parses the different values and returns
+                (total, avg), timedelta or a plain float
+            """
+            tofloats = lambda lst: (float(t) for t in lst)
+            if "/" in text: # "6.19/0.88" total/avg
+                return tuple(tofloats(text.split('/')))
+            elif ":" in text: # 11:14 hr:mn
+                hour, mins = tofloats(text.split(':'))
+                return timedelta(hours=hour, minutes=mins)
+            else:
+                return float(text)
+        success, response = self._make_request(
+            ACTION_GET_TRAFFIC_METER,
+            SOAP_TRAFFIC_METER.format(session_id=SESSION_ID))
+
+        if not success:
+            return None
+
+        # parse XML, see capture/trafficmeter.response
+        root = ET.fromstring(response)
+        namespace = {
+            "m": "urn:NETGEAR-ROUTER:service:DeviceConfig:1",
+            "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
+        }
+        data = root.find(".//m:GetTrafficMeterStatisticsResponse", namespace)
+        trafficdict = {t.tag: parse_text(t.text) for t in data}
+        return trafficdict
+
     def _make_request(self, action, message, try_login_after_failure=True):
         """Make an API request to the router."""
         # If we are not logged in, the request will fail for sure.
@@ -153,6 +194,8 @@ def convert(value, to_type, default=None):
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
 ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
+ACTION_GET_TRAFFIC_METER = \
+    "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
 
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
@@ -182,6 +225,21 @@ SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?
 <SOAP-ENV:Body>
 <M1:GetAttachDevice xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
 </M1:GetAttachDevice>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+"""
+
+SOAP_TRAFFIC_METER = """
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:GetTrafficMeterStatistics xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
