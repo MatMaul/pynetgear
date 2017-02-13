@@ -45,6 +45,7 @@ Supported routers
 It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router. According to the NETGEAR Genie app description, the following routers should work:
 
  * Netgear R7000
+ * Netgear R6900
  * Netgear R6300
  * Netgear R6250
  * Netgear R6200
@@ -55,6 +56,7 @@ It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router
  * Netgear WNDR4000
  * Netgear WNDR3800
  * Netgear WNDR3700v3
+ * Netgear WNDR3700v2
  * Netgear WNDR3400v2
  * Netgear WNR3500Lv2
  * Netgear WNR2200
