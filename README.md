@@ -67,3 +67,8 @@ It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router
  * Netgear WNR1000v3
  * Netgear WNDRMAC
  * Netgear WNR612v2
+
+Other libraries
+---------------
+
+ * [netgear-go](https://github.com/EvanPurkhiser/netgear-go) - A golang implementation
