@@ -77,7 +77,7 @@ class Netgear(object):
 
         for index, start in enumerate(device_start):
             try:
-                info = data[start:device_start[index+1]]
+                info = data[start:device_start[index + 1]]
             except IndexError:
                 # The last device, ignore the last element
                 info = data[start:-1]
@@ -118,10 +118,10 @@ class Netgear(object):
                 This function parses the different values and returns
                 (total, avg), timedelta or a plain float
             """
-            tofloats = lambda lst: (float(t) for t in lst)
-            if "/" in text: # "6.19/0.88" total/avg
+            def tofloats(lst): return (float(t) for t in lst)
+            if "/" in text:  # "6.19/0.88" total/avg
                 return tuple(tofloats(text.split('/')))
-            elif ":" in text: # 11:14 hr:mn
+            elif ":" in text:  # 11:14 hr:mn
                 hour, mins = tofloats(text.split(':'))
                 return timedelta(hours=hour, minutes=mins)
             else:
@@ -244,7 +244,8 @@ SOAP_TRAFFIC_METER = """
 <SessionID>{session_id}</SessionID>
 </SOAP-ENV:Header>
 <SOAP-ENV:Body>
-<M1:GetTrafficMeterStatistics xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
+<M1:GetTrafficMeterStatistics \
+ xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
