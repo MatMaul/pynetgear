@@ -64,35 +64,40 @@ class Netgear(object):
         if not success:
             return None
 
-        raw_data = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
+        raw = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
 
         # Netgear inserts a double-encoded value for "unknown" devices
-        data = data.replace(UNKNOWN_DEVICE_ENCODED,
-                            UNKNOWN_DEVICE_DECODED).split(";")
+        decoded = raw.replace(UNKNOWN_DEVICE_ENCODED, UNKNOWN_DEVICE_DECODED)
 
+        entries = data.split("@")
         devices = []
 
-        device_start = [index for index, value in enumerate(data)
-                        if '@' in value]
+        # First element is the total device count
+        if entries:
+            entry_count = int(entries.pop(0))
+        else:
+            _LOGGER.error("Error parsing device-list")
+            return devices
 
-        for index, start in enumerate(device_start):
-            try:
-                info = data[start:device_start[index + 1]]
-            except IndexError:
-                # The last device, ignore the last element
-                info = data[start:-1]
+        if(entry_count != len(entries)):
+            _LOGGER.warning(
+                """Number of devices should \
+                 be: %d but is: %d""", entry_count, len(entries))
+
+        for entry in entries:
+            info = entry.split(";")
 
             if len(info) == 0:
                 continue
-            elif len(info) < 4:
-                _LOGGER.warning('Unexpected entry: %s', info)
+            elif len(info) != (4 or 6):
+                _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
-            signal = convert(info[0].split("@")[0], int)
+            signal = int(info[0])
             ipv4, name, mac = info[1:4]
 
             # Not all routers will report link type and rate
-            if len(info) >= 6:
+            if len(info) == 6:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
             else:
@@ -193,7 +198,6 @@ def convert(value, to_type, default=None):
         # If value could not be converted
         return default
 
-
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
 ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
@@ -245,7 +249,7 @@ SOAP_TRAFFIC_METER = """
 </SOAP-ENV:Header>
 <SOAP-ENV:Body>
 <M1:GetTrafficMeterStatistics \
- xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
+xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
