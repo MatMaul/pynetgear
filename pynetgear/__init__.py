@@ -64,8 +64,11 @@ class Netgear(object):
         if not success:
             return None
 
-        data = re.search(r"<NewAttachDevice>(.*)</NewAttachDevice>",
-                         response).group(1).split(";")
+        raw_data = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
+
+        # Netgear inserts a double-encoded value for "unknown" devices
+        data = data.replace(UNKNOWN_DEVICE_ENCODED,
+                            UNKNOWN_DEVICE_DECODED).split(";")
 
         devices = []
 
@@ -197,6 +200,8 @@ ACTION_GET_ATTACHED_DEVICES = \
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
 
+REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
+
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
 
@@ -243,3 +248,6 @@ SOAP_TRAFFIC_METER = """
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
+
+UNKNOWN_DEVICE_DECODED = '<unknown>'
+UNKNOWN_DEVICE_ENCODED = '&lt;unknown&gt;'
