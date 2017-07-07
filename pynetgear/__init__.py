@@ -57,6 +57,15 @@ class Netgear(object):
         """
         _LOGGER.info("Get attached devices")
 
+        def parse_response(response):
+            try:
+                result = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
+            except (AttributeError):
+                _LOGGER.error("Error parsing respone: %s", response)
+                return False, None
+            else:
+                return True, result
+
         success, response = self._make_request(
             ACTION_GET_ATTACHED_DEVICES,
             SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID))
@@ -64,7 +73,10 @@ class Netgear(object):
         if not success:
             return None
 
-        raw = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
+        parsable, raw = parse_response(response)
+
+        if not parsable:
+            return None
 
         # Netgear inserts a double-encoded value for "unknown" devices
         decoded = raw.replace(UNKNOWN_DEVICE_ENCODED, UNKNOWN_DEVICE_DECODED)
@@ -73,11 +85,11 @@ class Netgear(object):
         devices = []
 
         # First element is the total device count
-        if entries:
-            entry_count = int(entries.pop(0))
+        if len(entries) > 1:
+            entry_count = convert(entries.pop(0), int)
         else:
-            _LOGGER.error("Error parsing device-list")
-            return devices
+            _LOGGER.error("Error parsing device-list: %s", entries)
+            return None
 
         if(entry_count != len(entries)):
             _LOGGER.warning(
@@ -89,12 +101,12 @@ class Netgear(object):
 
             if len(info) == 0:
                 continue
-            
+
             # Not all routers will report link type and rate
             if len(info) == 7:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
-                signal = convert(info[6], int)                    
+                signal = convert(info[6], int)
             elif len(info) == 4:
                 signal = 100
                 link_type = None
@@ -250,7 +262,7 @@ SOAP_TRAFFIC_METER = """
 <SessionID>{session_id}</SessionID>
 </SOAP-ENV:Header>
 <SOAP-ENV:Body>
-<M1:GetTrafficMeterStatistics \
+<M1:GetTrafficMeterStatistics\
 xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
