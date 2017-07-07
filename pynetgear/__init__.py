@@ -69,7 +69,7 @@ class Netgear(object):
         # Netgear inserts a double-encoded value for "unknown" devices
         decoded = raw.replace(UNKNOWN_DEVICE_ENCODED, UNKNOWN_DEVICE_DECODED)
 
-        entries = data.split("@")
+        entries = decoded.split("@")
         devices = []
 
         # First element is the total device count
@@ -89,20 +89,21 @@ class Netgear(object):
 
             if len(info) == 0:
                 continue
-            elif len(info) != (4 or 6):
+            
+            # Not all routers will report link type and rate
+            if len(info) == 7:
+                link_type = info[4]
+                link_rate = convert(info[5], int)
+                signal = convert(info[6], int)                    
+            elif len(info) == 4:
+                signal = 100
+                link_type = None
+                link_rate = 0
+            else:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
-            signal = int(info[0])
             ipv4, name, mac = info[1:4]
-
-            # Not all routers will report link type and rate
-            if len(info) == 6:
-                link_type = info[4]
-                link_rate = convert(info[5], int)
-            else:
-                link_type = None
-                link_rate = 0
 
             devices.append(Device(signal, ipv4, name, mac, link_type,
                                   link_rate))
@@ -197,6 +198,7 @@ def convert(value, to_type, default=None):
     except ValueError:
         # If value could not be converted
         return default
+
 
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
 ACTION_GET_ATTACHED_DEVICES = \
