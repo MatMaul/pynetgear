@@ -57,6 +57,15 @@ class Netgear(object):
         """
         _LOGGER.info("Get attached devices")
 
+        def parse_response(response):
+            try:
+                result = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
+            except (AttributeError):
+                _LOGGER.error("Error parsing respone: %s", response)
+                return False, None
+            else:
+                return True, result
+
         success, response = self._make_request(
             ACTION_GET_ATTACHED_DEVICES,
             SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID))
@@ -64,37 +73,49 @@ class Netgear(object):
         if not success:
             return None
 
-        data = re.search(r"<NewAttachDevice>(.*)</NewAttachDevice>",
-                         response).group(1).split(";")
+        parsable, raw = parse_response(response)
 
+        if not parsable:
+            return None
+
+        # Netgear inserts a double-encoded value for "unknown" devices
+        decoded = raw.replace(UNKNOWN_DEVICE_ENCODED, UNKNOWN_DEVICE_DECODED)
+
+        entries = decoded.split("@")
         devices = []
 
-        device_start = [index for index, value in enumerate(data)
-                        if '@' in value]
+        # First element is the total device count
+        if len(entries) > 1:
+            entry_count = convert(entries.pop(0), int)
+        else:
+            _LOGGER.error("Error parsing device-list: %s", entries)
+            return None
 
-        for index, start in enumerate(device_start):
-            try:
-                info = data[start:device_start[index+1]]
-            except IndexError:
-                # The last device, ignore the last element
-                info = data[start:-1]
+        if(entry_count != len(entries)):
+            _LOGGER.warning(
+                """Number of devices should \
+                 be: %d but is: %d""", entry_count, len(entries))
+
+        for entry in entries:
+            info = entry.split(";")
 
             if len(info) == 0:
                 continue
-            elif len(info) < 4:
-                _LOGGER.warning('Unexpected entry: %s', info)
-                continue
-
-            signal = convert(info[0].split("@")[0], int)
-            ipv4, name, mac = info[1:4]
 
             # Not all routers will report link type and rate
-            if len(info) >= 6:
+            if len(info) == 7:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
-            else:
+                signal = convert(info[6], int)
+            elif len(info) == 4:
+                signal = 100
                 link_type = None
                 link_rate = 0
+            else:
+                _LOGGER.warning("Unexpected entry: %s", info)
+                continue
+
+            ipv4, name, mac = info[1:4]
 
             devices.append(Device(signal, ipv4, name, mac, link_type,
                                   link_rate))
@@ -115,10 +136,10 @@ class Netgear(object):
                 This function parses the different values and returns
                 (total, avg), timedelta or a plain float
             """
-            tofloats = lambda lst: (float(t) for t in lst)
-            if "/" in text: # "6.19/0.88" total/avg
+            def tofloats(lst): return (float(t) for t in lst)
+            if "/" in text:  # "6.19/0.88" total/avg
                 return tuple(tofloats(text.split('/')))
-            elif ":" in text: # 11:14 hr:mn
+            elif ":" in text:  # 11:14 hr:mn
                 hour, mins = tofloats(text.split(':'))
                 return timedelta(hours=hour, minutes=mins)
             else:
@@ -197,6 +218,8 @@ ACTION_GET_ATTACHED_DEVICES = \
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
 
+REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
+
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
 
@@ -239,7 +262,11 @@ SOAP_TRAFFIC_METER = """
 <SessionID>{session_id}</SessionID>
 </SOAP-ENV:Header>
 <SOAP-ENV:Body>
-<M1:GetTrafficMeterStatistics xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
+<M1:GetTrafficMeterStatistics\
+xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
+
+UNKNOWN_DEVICE_DECODED = '<unknown>'
+UNKNOWN_DEVICE_ENCODED = '&lt;unknown&gt;'
