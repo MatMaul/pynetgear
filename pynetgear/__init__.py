@@ -15,7 +15,7 @@ DEFAULT_PORT = 5000
 _LOGGER = logging.getLogger(__name__)
 
 Device = namedtuple(
-    "Device", ["signal", "ip", "name", "mac", "type", "link_rate"])
+    "Device", ["signal", "ip", "name", "mac", "type", "link_rate", "access"])
 
 
 class Netgear(object):
@@ -48,6 +48,30 @@ class Netgear(object):
         self.logged_in = success
 
         return self.logged_in
+
+    def allow_device(self, device=None):
+        success, response = self._make_request(
+            ACTION_ALLOW_DEVICE,
+            SOAP_ALLOW_DEVICE.format(session_id=SESSION_ID, mac_address=device))
+        return response
+
+    def block_device(self, device=None):
+        success, response = self._make_request(
+            ACTION_BLOCK_DEVICE,
+            SOAP_BLOCK_DEVICE.format(session_id=SESSION_ID, mac_address=device))
+        return response
+
+    def enable_config(self):
+        success, response = self._make_request(
+            ACTION_ENABLE_CONFIG,
+            SOAP_ENABLE_CONFIG.format(session_id=SESSION_ID))
+        return response
+
+    def disable_config(self):
+        success, response = self._make_request(
+            ACTION_DISABLE_CONFIG,
+            SOAP_DISABLE_CONFIG)
+        return response
 
     def get_attached_devices(self):
         """
@@ -103,14 +127,21 @@ class Netgear(object):
                 continue
 
             # Not all routers will report link type and rate
-            if len(info) == 7:
+            if len(info) == 8:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
                 signal = convert(info[6], int)
+                access = info[7]
+            elif len(info) == 7:
+                link_type = info[4]
+                link_rate = convert(info[5], int)
+                signal = convert(info[6], int)
+                access = "Allow"
             elif len(info) == 4:
                 signal = 100
                 link_type = None
                 link_rate = 0
+                access = "Allow"
             else:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
@@ -118,7 +149,7 @@ class Netgear(object):
             ipv4, name, mac = info[1:4]
 
             devices.append(Device(signal, ipv4, name, mac, link_type,
-                                  link_rate))
+                                  link_rate, access))
 
         return devices
 
@@ -217,11 +248,17 @@ ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
+ACTION_ENABLE_CONFIG = "urn:NETGEAR-ROUTER:service:DeviceConfig:1#ConfigurationStarted"
+ACTION_DISABLE_CONFIG = "urn:NETGEAR-ROUTER:service:DeviceConfig:1#ConfigurationFinished"
+ACTION_ALLOW_DEVICE = "urn:NETGEAR-ROUTER:service:DeviceConfig:1#SetBlockDeviceByMAC"
+ACTION_BLOCK_DEVICE = "urn:NETGEAR-ROUTER:service:DeviceConfig:1#SetBlockDeviceByMAC"
+
 
 REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
 
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
+
 
 SOAP_LOGIN = """<?xml version="1.0" encoding="utf-8" ?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -266,6 +303,63 @@ SOAP_TRAFFIC_METER = """
 xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
+"""
+
+SOAP_ENABLE_CONFIG = """
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:ConfigurationStarted xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewSessionID>{session_id}</NewSessionID>
+</M1:ConfigurationStarted>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+"""
+
+SOAP_ALLOW_DEVICE = """
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:SetBlockDeviceByMAC xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewAllowOrBlock>Allow</NewAllowOrBlock>
+<NewMACAddress>{mac_address}</NewMACAddress>
+</M1:SetBlockDeviceByMAC>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+SOAP_BLOCK_DEVICE = """
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:SetBlockDeviceByMAC xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewAllowOrBlock>Block</NewAllowOrBlock>
+<NewMACAddress>{mac_address}</NewMACAddress>
+</M1:SetBlockDeviceByMAC>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+SOAP_DISABLE_CONFIG = """
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:ConfigurationFinished xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewStatus>ChangesApplied</NewStatus>
+</M1:ConfigurationFinished>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
 """
 
 UNKNOWN_DEVICE_DECODED = '<unknown>'
