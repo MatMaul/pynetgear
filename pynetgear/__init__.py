@@ -111,6 +111,10 @@ class Netgear(object):
                 signal = 100
                 link_type = None
                 link_rate = 0
+            elif len(info) == 8:
+                link_type = info[4]
+                link_rate = convert(info[5], int)
+                signal = convert(info[6], int)
             else:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
