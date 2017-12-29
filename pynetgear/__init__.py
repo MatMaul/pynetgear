@@ -29,6 +29,7 @@ class Netgear(object):
         self.password = password
         self.port = port
         self.logged_in = host is DEFAULT_HOST
+        self.config_started = False
 
     def login(self):
         """
@@ -160,6 +161,85 @@ class Netgear(object):
         data = root.find(".//m:GetTrafficMeterStatisticsResponse", namespace)
         trafficdict = {t.tag: parse_text(t.text) for t in data}
         return trafficdict
+            
+    def config_start(self):
+        """
+        Start a configuration aciton.
+
+        I'm guessing this is kind of like a begin transation / end transaction in a db.
+        """
+        _LOGGER.info("Config start")
+
+        message = SOAP_CONFIG_START.format(session_id=SESSION_ID)
+
+        success, _ = self._make_request(
+            ACTION_CONFIG_START, message)
+        
+        self.config_started = success
+        return success
+            
+    def config_finish(self):
+        """
+        Start a configuration aciton.
+
+        I'm guessing this is kind of like a begin transation / end transaction in a db.
+        """
+        _LOGGER.info("Config finish")
+        if not self.config_started
+        	return True
+
+        message = SOAP_CONFIG_FINISH.format(session_id=SESSION_ID)
+
+        success, _ = self._make_request(
+            ACTION_CONFIG_FINISH, message)
+        
+        self.config_started = not success
+        return not success
+            
+    def allow_block_device(self, mac_addr, device_status='Block'):
+        """
+        Allow or Block a device via its Mac Address.
+
+        Pass in the mac address for the device that you want to set. Pass in the 
+        device_status you wish to set the device to: Allow (allow device to access the
+        network) or Block (block the device from accessing the network).
+        """
+        _LOGGER.info("Allow block device")
+        if self.config_started
+        	_LOGGER.error("Inconsistant configuraiton state, configuraiton already started")
+        	return False
+        
+        if not self.config_start():
+        	_LOGGER.error("Could not start configuration")
+        	return False
+        message = SOAP_ALLOW_BLOCK_DEVICE.format(session_id=SESSION_ID, device_status=device_status, mac_addr=mac_addr)
+        success, _ = self._make_request(
+            ACTION_ALLOW_BLOCK_DEVICE, message)
+        if not success:
+        	_LOGGER.error("Could not successfully call allow/block device")
+        	return False
+        	
+        if not self.config_finish():
+        	_LOGGER.error("Inconsistant configuraiton state, configuraiton already finished")
+        	return False
+        return True
+            
+    def get_attached_devices_2(self):
+        """
+        Return 'Enhanced' list of connected devices to the router.
+
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Get attached devices 2")
+        
+		success, response = self._make_request(
+            ACTION_GET_ATTACHED_DEVICES_2,
+            SOAP_ATTACHED_DEVICES_2.format(session_id=SESSION_ID))
+
+        if not success:
+            return None
+            
+        return response
 
     def _make_request(self, action, message, try_login_after_failure=True):
         """Make an API request to the router."""
@@ -217,6 +297,15 @@ ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
+ACTION_CONFIG_START = \
+	"urn:NETGEAR-ROUTER:service:DeviceConfig:1#ConfigurationStarted"
+ACTION_CONFIG_FINISH = \
+	"urn:NETGEAR-ROUTER:service:DeviceConfig:1#ConfigurationFinished"
+ACTION_ALLOW_BLOCK_DEVICE = \
+	"urn:NETGEAR-ROUTER:service:DeviceConfig:1#SetBlockDeviceByMAC"
+ACTION_GET_ATTACHED_DEVICES_2 = \
+	"urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice2"
+
 
 REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
 
@@ -267,6 +356,66 @@ xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatist
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
+
+SOAP_CONFIG_START = """<?xml version="1.0" encoding="utf-8" ?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" 
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" 
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:ConfigurationStarted xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewSessionID>{session_id}</NewSessionID>
+</M1:ConfigurationStarted>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+SOAP_CONFIG_FINISH = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" 
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" 
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:ConfigurationFinished xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewStatus>ChangesApplied</NewStatus>
+</M1:ConfigurationFinished>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+SOAP_ALLOW_BLOCK_DEVICE = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" 
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:SetBlockDeviceByMAC xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1">
+<NewAllowOrBlock>{device_status}</NewAllowOrBlock>
+<NewMACAddress>{mac_addr}</NewMACAddress>
+</M1:SetBlockDeviceByMAC>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
+
+SOAP_ATTACHED_DEVICES_2 = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" 
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/" 
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:GetAttachDevice2 xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
+</M1:GetAttachDevice2>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
 
 UNKNOWN_DEVICE_DECODED = '<unknown>'
 UNKNOWN_DEVICE_ENCODED = '&lt;unknown&gt;'
