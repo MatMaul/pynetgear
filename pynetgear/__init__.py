@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Module to communicate with Netgear routers using the SOAP v2 API."""
 from __future__ import print_function
 
