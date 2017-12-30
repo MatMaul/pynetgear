@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Run PyNetgear from the command-line."""
 import sys
 from pynetgear import Netgear

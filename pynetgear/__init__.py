@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Module to communicate with Netgear routers using the SOAP v2 API."""
 from __future__ import print_function
 
@@ -137,13 +140,16 @@ class Netgear(object):
                 (total, avg), timedelta or a plain float
             """
             def tofloats(lst): return (float(t) for t in lst)
-            if "/" in text:  # "6.19/0.88" total/avg
-                return tuple(tofloats(text.split('/')))
-            elif ":" in text:  # 11:14 hr:mn
-                hour, mins = tofloats(text.split(':'))
-                return timedelta(hours=hour, minutes=mins)
-            else:
-                return float(text)
+            try:
+                if "/" in text:  # "6.19/0.88" total/avg
+                    return tuple(tofloats(text.split('/')))
+                elif ":" in text:  # 11:14 hr:mn
+                    hour, mins = tofloats(text.split(':'))
+                    return timedelta(hours=hour, minutes=mins)
+                else:
+                    return float(text)
+            except ValueError:
+                return None
         success, response = self._make_request(
             ACTION_GET_TRAFFIC_METER,
             SOAP_TRAFFIC_METER.format(session_id=SESSION_ID))
