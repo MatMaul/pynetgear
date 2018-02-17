@@ -1,0 +1,45 @@
+POST /soap/server_sa/ HTTP/1.0
+SOAPAction: urn:NETGEAR-ROUTER:service:WLANConfiguration:1#SetGuestAccessEnabled2
+content-type: text/xml;charset=utf-8
+HOST: www.routerlogin.com
+User-Agent: SOAP Toolkit 3.0
+connection: keep-Alive
+Cache-Control: no-cache
+Pragma: no-cache
+Cookie: sess_id=595c7d4dbd5cd58a94352588a87c6c3295464a3e7ac5262592e08799820c3e01830a65a0e60a540d47582e1850a861e25b003af85315d2ab8a0104ee2cdab661; SameSite=Strict
+content-length: 752
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema" xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header><SessionID>session_ID</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:SetGuestAccessEnabled2 xmlns:M1="urn:NETGEAR-ROUTER:service:WLANConfiguration:1">
+<NewGuestAccessEnabled>1</NewGuestAccessEnabled>
+<NewKey1>GUEST_SSID</NewKey1>
+<NewKey2>0</NewKey2>
+<NewKey3>0</NewKey3>
+<NewKey4>0</NewKey4>
+<NewSSID>GUEST_SSID</NewSSID>
+<NewSecurityMode>WPA2-PSK</NewSecurityMode>
+</M1:SetGuestAccessEnabled2>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+HTTP/1.1 200 OK
+CONTENT-LENGTH:460
+CONTENT-TYPE: text/xml; charset="UTF-8"
+SERVER: "OS/version" UPnP/1.0 "product/version"
+
+<?xml version="1.0" encoding="UTF-8"?>
+<soap-env:Envelope
+        xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"
+        soap-env:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+       >
+ <soap-env:Body>
+    <m:SetGuestAccessEnabled2Response
+        xmlns:m="urn:NETGEAR-ROUTER:service:WLANConfiguration:1">
+    </m:SetGuestAccessEnabled2Response>
+    <ResponseCode>000</ResponseCode>
+</soap-env:Body>
+</soap-env:Envelope>
