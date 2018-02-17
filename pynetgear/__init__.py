@@ -161,6 +161,66 @@ class Netgear(object):
         trafficdict = {t.tag: parse_text(t.text) for t in data}
         return trafficdict
 
+    def set_guest_wifi_enable(self):
+        """
+        Turn on Guest WIFI
+
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Enable Guest Wifi")
+
+        def parse_response(response):
+            try:
+                result = re.search(REGEX_ENABLE_GUEST_WIFI, response).group(1)
+            except (AttributeError):
+                _LOGGER.error("Error parsing respone: %s", response)
+                return False, None
+            else:
+                return True, result
+
+        success, response = self._make_request(
+            ACTION_ENABLE_GUEST_WIFI,
+            SOAP_ENABLE_GUEST_WIFI.format(session_id=SESSION_ID))
+
+        if not success:
+            return None
+
+        parsable, raw = parse_response(response)
+
+        if not parsable:
+            return None
+        return success, response
+
+    def set_guest_wifi_disable(self):
+        """
+        Turn off Guest WIFI
+
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Disable Guest Wifi")
+
+        def parse_response(response):
+            try:
+                result = re.search(REGEX_ENABLE_GUEST_WIFI, response).group(1)
+            except (AttributeError):
+                _LOGGER.error("Error parsing respone: %s", response)
+                return False, None
+            else:
+                return True, result
+
+        success, response = self._make_request(
+            ACTION_DISABLE_GUEST_WIFI,
+            SOAP_DISABLE_GUEST_WIFI.format(session_id=SESSION_ID))
+
+        if not success:
+            return None
+
+        parsable, raw = parse_response(response)
+
+        if not parsable:
+            return None
+        return success, response
+
     def _make_request(self, action, message, try_login_after_failure=True):
         """Make an API request to the router."""
         # If we are not logged in, the request will fail for sure.
@@ -223,6 +283,8 @@ ACTION_DISABLE_GUEST_WIFI = \
  "urn:NETGEAR-ROUTER:service:WLANConfiguration:1#SetGuestAccessEnabled"
 
 REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
+
+REGEX_ENABLE_GUEST_WIFI =r".*(WLANConfiguration:1).*"
 
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
