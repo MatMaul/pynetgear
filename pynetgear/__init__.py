@@ -161,7 +161,7 @@ class Netgear(object):
         trafficdict = {t.tag: parse_text(t.text) for t in data}
         return trafficdict
 
-    def set_guest_wifi_enable(self):
+    def set_guest_wifi_enable(self,SSID,SSID_KEY):
         """
         Turn on Guest WIFI
 
@@ -177,10 +177,11 @@ class Netgear(object):
                 return False, None
             else:
                 return True, result
-
+        # Right now key should be 16 characters are less, key is broken down into key1,key2..key4
+        # So the assumption is you have breack it down into 16 byte chunks
         success, response = self._make_request(
             ACTION_ENABLE_GUEST_WIFI,
-            SOAP_ENABLE_GUEST_WIFI.format(session_id=SESSION_ID))
+            SOAP_ENABLE_GUEST_WIFI.format(session_id=SESSION_ID,ssid=SSID,ssid_key=SSID_KEY))
 
         if not success:
             return None
@@ -345,11 +346,11 @@ SOAP_ENABLE_GUEST_WIFI = """<?xml version="1.0" encoding="UTF-8" standalone="no"
   <SOAP-ENV:Body>
   <M1:SetGuestAccessEnabled2 xmlns:M1="urn:NETGEAR-ROUTER:service:WLANConfiguration:1">
   <NewGuestAccessEnabled>1</NewGuestAccessEnabled>
-  <NewKey1>NinaPooh1</NewKey1>
+  <NewKey1>{ssid_key}</NewKey1>
   <NewKey2>0</NewKey2>
   <NewKey3>0</NewKey3>
   <NewKey4>0</NewKey4>
-  <NewSSID>nina-tracker</NewSSID>
+  <NewSSID>{ssid}</NewSSID>
   <NewSecurityMode>WPA2-PSK</NewSecurityMode>
   </M1:SetGuestAccessEnabled2>
   </SOAP-ENV:Body>
