@@ -268,5 +268,41 @@ xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatist
 </SOAP-ENV:Envelope>
 """
 
+SOAP_ENABLE_GUEST_WIFI = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header>
+  <SessionID>  <SOAP-ENV:Header><SessionID>{session_id}</SessionID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+  <M1:SetGuestAccessEnabled2 xmlns:M1="urn:NETGEAR-ROUTER:service:WLANConfiguration:1">
+  <NewGuestAccessEnabled>1</NewGuestAccessEnabled>
+  <NewKey1>NinaPooh1</NewKey1>
+  <NewKey2>0</NewKey2>
+  <NewKey3>0</NewKey3>
+  <NewKey4>0</NewKey4>
+  <NewSSID>nina-tracker</NewSSID>
+  <NewSecurityMode>WPA2-PSK</NewSecurityMode>
+  </M1:SetGuestAccessEnabled2>
+  </SOAP-ENV:Body>
+  </SOAP-ENV:Envelope>
+  """
+
+SOAP_DISABLE_GUEST_WIFI = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header><SessionID>{session_id}</SessionID>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+  <M1:SetGuestAccessEnabled xmlns:M1="urn:NETGEAR-ROUTER:service:WLANConfiguration:1"><NewGuestAccessEnabled>0</NewGuestAccessEnabled>
+  </M1:SetGuestAccessEnabled>
+  </SOAP-ENV:Body></SOAP-ENV:Envelope>
+  """
+
+
 UNKNOWN_DEVICE_DECODED = '<unknown>'
 UNKNOWN_DEVICE_ENCODED = '&lt;unknown&gt;'
