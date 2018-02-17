@@ -217,6 +217,10 @@ ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
+ACTION_ENABLE_GUEST_WIFI = \
+ "SOAPAction: urn:NETGEAR-ROUTER:service:WLANConfiguration:1#SetGuestAccessEnabled2"
+ACTION_DISABLE_GUEST_WIFI = \
+ "urn:NETGEAR-ROUTER:service:WLANConfiguration:1#SetGuestAccessEnabled"
 
 REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
 
