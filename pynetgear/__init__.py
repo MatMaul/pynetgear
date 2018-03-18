@@ -15,7 +15,11 @@ DEFAULT_PORT = 5000
 _LOGGER = logging.getLogger(__name__)
 
 Device = namedtuple(
-    "Device", ["signal", "ip", "name", "mac", "type", "link_rate"])
+    "Device", ["signal", "ip", "name", "mac", "type", "link_rate",
+               "allow_or_block", "device_type", "device_model",
+               "ssid", "conn_ap_mac"])
+
+ATTACHED_DEVICES_NODE_XPATH = ".//m:GetAttachDevice2Response/NewAttachDevice"
 
 
 class Netgear(object):
@@ -102,23 +106,76 @@ class Netgear(object):
             if len(info) == 0:
                 continue
 
-            # Not all routers will report link type and rate
-            if len(info) == 7:
+            # Not all routers will report those
+            signal = None
+            link_type = None
+            link_rate = None
+            allow_or_block = None
+
+            if len(info) >= 8:
+                allow_or_block = info[7]
+            if len(info) >= 7:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
                 signal = convert(info[6], int)
-            elif len(info) == 4:
-                signal = 100
-                link_type = None
-                link_rate = 0
-            else:
+
+            if len(info) < 4:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
             ipv4, name, mac = info[1:4]
 
-            devices.append(Device(signal, ipv4, name, mac, link_type,
-                                  link_rate))
+            devices.append(Device(signal, ipv4, name, mac,
+                                  link_type, link_rate, allow_or_block,
+                                  None, None, None, None))
+
+        return devices
+
+    def get_attached_devices_2(self):
+        """
+        Return list of connected devices to the router with details.
+
+        This call is slower and probably heavier on the router load.
+
+        Returns None if error occurred.
+        """
+        _LOGGER.info("Get attached devices 2")
+
+        success, response = self._make_request(
+            ACTION_GET_ATTACHED_DEVICES_2,
+            SOAP_ATTACHED_DEVICES_2.format(session_id=SESSION_ID))
+
+        if not success:
+            return None
+
+        root = ET.fromstring(response)
+        namespace = {
+            "m": "urn:NETGEAR-ROUTER:service:DeviceInfo:1",
+            "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
+        }
+
+        devices_node = root.find(ATTACHED_DEVICES_NODE_XPATH, namespace)
+        if not devices_node:
+            _LOGGER.error("Error parsing response: %s", response)
+            return None
+
+        xml_devices = devices_node.findall("Device", namespace)
+        devices = []
+        for d in xml_devices:
+            ip = xml_get(d, 'IP')
+            name = xml_get(d, 'Name')
+            mac = xml_get(d, 'MAC')
+            signal = convert(xml_get(d, 'SignalStrength'), int)
+            link_type = xml_get(d, 'ConnectionType')
+            link_rate = xml_get(d, 'Linkspeed')
+            allow_or_block = xml_get(d, 'AllowOrBlock')
+            device_type = convert(xml_get(d, 'DeviceType'), int)
+            device_model = xml_get(d, 'DeviceModel')
+            ssid = xml_get(d, 'SSID')
+            conn_ap_mac = xml_get(d, 'ConnAPMAC')
+            devices.append(Device(signal, ip, name, mac, link_type, link_rate,
+                                  allow_or_block, device_type, device_model,
+                                  ssid, conn_ap_mac))
 
         return devices
 
@@ -194,6 +251,18 @@ class Netgear(object):
             return False, ""
 
 
+def xml_get(e, name):
+    """
+    Returns the value of the subnode "name" of element e.
+
+    Returns None if the subnode doesn't exist
+    """
+    r = e.find(name)
+    if r is not None:
+        return r.text
+    return None
+
+
 def _get_soap_header(action):
     return {"SOAPAction": action}
 
@@ -215,6 +284,8 @@ def convert(value, to_type, default=None):
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
 ACTION_GET_ATTACHED_DEVICES = \
     "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
+ACTION_GET_ATTACHED_DEVICES_2 = \
+    "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice2"
 ACTION_GET_TRAFFIC_METER = \
     "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
 
@@ -248,6 +319,21 @@ SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?
 <SOAP-ENV:Body>
 <M1:GetAttachDevice xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
 </M1:GetAttachDevice>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+"""
+
+SOAP_ATTACHED_DEVICES_2 = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+<SOAP-ENV:Header>
+<SessionID>{session_id}</SessionID>
+</SOAP-ENV:Header>
+<SOAP-ENV:Body>
+<M1:GetAttachDevice2 xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
+</M1:GetAttachDevice2>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
