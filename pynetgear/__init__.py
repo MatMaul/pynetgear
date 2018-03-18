@@ -22,13 +22,16 @@ class Netgear(object):
     """Represents a session to a Netgear Router."""
 
     def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER,
-                 port=DEFAULT_PORT):
+                 port=DEFAULT_PORT, url=None):
         """Initialize a Netgear session."""
-        self.soap_url = "http://{}:{}/soap/server_sa/".format(host, port)
+        if url:
+            self.soap_url = url + "/soap/server_sa/"
+        else:
+            self.soap_url = "http://{}:{}/soap/server_sa/".format(host, port)
         self.username = user
         self.password = password
         self.port = port
-        self.logged_in = host is DEFAULT_HOST
+        self.logged_in = False
 
     def login(self):
         """
@@ -171,16 +174,16 @@ class Netgear(object):
         headers = _get_soap_header(action)
 
         try:
-            req = requests.post(
-                self.soap_url, headers=headers, data=message, timeout=10)
+            req = requests.post(self.soap_url, headers=headers,
+                                data=message, timeout=10, verify=False)
 
             success = _is_valid_response(req)
 
             if not success and try_login_after_failure:
                 self.login()
 
-                req = requests.post(
-                    self.soap_url, headers=headers, data=message, timeout=10)
+                req = requests.post(self.soap_url, headers=headers,
+                                    data=message, timeout=10, verify=False)
 
                 success = _is_valid_response(req)
 
