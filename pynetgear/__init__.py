@@ -103,7 +103,7 @@ class Netgear(object):
                 continue
 
             # Not all routers will report link type and rate
-            if len(info) == 7:
+            if len(info) >= 7:
                 link_type = info[4]
                 link_rate = convert(info[5], int)
                 signal = convert(info[6], int)
