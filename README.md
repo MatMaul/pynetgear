@@ -8,7 +8,9 @@ pyNetgear works with Python 2 and 3.
 If you are connected to the network of the Netgear router, a host is optional.
 If you are connected via a wired connection to the Netgear router, a password is optional.
 The username defaults to admin.
-The port defaults to 5000
+The port defaults to 5000.
+You can specify url and it will take precedence on host and port parameters.
+This allows the use of HTTPS, `https://orbilogin.com` for example.
 
 It currently supports the following operations:
 
@@ -38,8 +40,8 @@ To test run from the console:
 
 To use within your Python scripts:
 ```python
-# All four parameters are optional
-netgear = Netgear(password, host, username, port)
+# All five parameters are optional
+netgear = Netgear(password, host, username, port, url)
 
 for i in netgear.get_attached_devices():
     print i
