@@ -16,7 +16,12 @@ It currently supports the following operations:
 Logs in to the router. Will return True or False to indicate success.
 
 **get_attached_devices**<br>
-Returns a list of named tuples describing the device signal, ip, name, mac, type and link_rate.
+Returns a list of named tuples describing the device signal, ip, name, mac, type, link_rate and allow_or_block.
+
+**get_attached_devices_2**<br>
+Returns a list of named tuples describing the device signal, ip, name, mac, type, link_rate, allow_or_block, device_type, device_model, ssid and conn_ap_mac.
+
+This call is slower and probably heavier on the router load.
 
 **get_traffic_meter**<br>
 Return a dict containing the traffic meter information from the router (if enabled in the webinterface).
@@ -44,6 +49,7 @@ Supported routers
 -----------------
 It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router. According to the NETGEAR Genie app description, the following routers should work:
 
+ * Netgear Orbi
  * Netgear R7000
  * Netgear R6900
  * Netgear R6300
