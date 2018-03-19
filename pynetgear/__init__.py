@@ -25,13 +25,24 @@ ATTACHED_DEVICES_NODE_XPATH = ".//m:GetAttachDevice2Response/NewAttachDevice"
 class Netgear(object):
     """Represents a session to a Netgear Router."""
 
-    def __init__(self, password=None, host=DEFAULT_HOST, user=DEFAULT_USER,
-                 port=DEFAULT_PORT, url=None):
+    def __init__(self, password=None, host=None, user=None, port=None,
+                 url=None):
         """Initialize a Netgear session."""
+        if not url and not host and not port:
+            url = autodetect_url()
+
         if url:
             self.soap_url = url + "/soap/server_sa/"
         else:
+            if not host:
+                host = DEFAULT_HOST
+            if not port:
+                port = DEFAULT_PORT
             self.soap_url = "http://{}:{}/soap/server_sa/".format(host, port)
+
+        if not user:
+            user = DEFAULT_USER
+
         self.username = user
         self.password = password
         self.port = port
@@ -282,6 +293,26 @@ def convert(value, to_type, default=None):
     except ValueError:
         # If value could not be converted
         return default
+
+
+def autodetect_url():
+    """
+    Try to autodetect the base URL of the router SOAP service.
+
+    Returns None if it can't be found.
+    """
+    for url in ["http://routerlogin.net:5000", "https://routerlogin.net",
+                "http://routerlogin.net"]:
+        try:
+            r = requests.get(url + "/soap/server_sa/",
+                             headers=_get_soap_header("test"),
+                             verify=False)
+            if r.status_code == 200:
+                return url
+        except:
+            pass
+
+    return None
 
 
 ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"

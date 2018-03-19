@@ -40,8 +40,9 @@ To test run from the console:
 
 To use within your Python scripts:
 ```python
-# All five parameters are optional
-netgear = Netgear(password, host, username, port, url)
+from pynetgear import Netgear
+
+netgear = Netgear(password=mypassword)
 
 for i in netgear.get_attached_devices():
     print i
