@@ -58,12 +58,11 @@ class Netgear(object):
         """
         _LOGGER.info("Login")
 
-        message = SOAP_LOGIN.format(session_id=SESSION_ID,
-                                    username=self.username,
-                                    password=self.password)
+        body = LOGIN_BODY.format(username=self.username,
+                                 password=self.password)
 
-        success, _ = self._make_request(
-            ACTION_LOGIN, message, False)
+        success, _ = self._make_request("ParentalControl:1", "Authenticate",
+                                        body, False)
 
         self.logged_in = success
 
@@ -86,9 +85,8 @@ class Netgear(object):
             else:
                 return True, result
 
-        success, response = self._make_request(
-            ACTION_GET_ATTACHED_DEVICES,
-            SOAP_ATTACHED_DEVICES.format(session_id=SESSION_ID))
+        success, response = self._make_request(SERVICE_DEVICE_INFO,
+                                               "GetAttachDevice")
 
         if not success:
             return None
@@ -157,16 +155,15 @@ class Netgear(object):
         """
         _LOGGER.info("Get attached devices 2")
 
-        success, response = self._make_request(
-            ACTION_GET_ATTACHED_DEVICES_2,
-            SOAP_ATTACHED_DEVICES_2.format(session_id=SESSION_ID))
+        success, response = self._make_request(SERVICE_DEVICE_INFO,
+                                               "GetAttachDevice2")
 
         if not success:
             return None
 
         root = ET.fromstring(response)
         namespace = {
-            "m": "urn:NETGEAR-ROUTER:service:DeviceInfo:1",
+            "m": SERVICE_PREFIX + SERVICE_DEVICE_INFO,
             "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
         }
 
@@ -217,9 +214,8 @@ class Netgear(object):
                 return timedelta(hours=hour, minutes=mins)
             else:
                 return float(text)
-        success, response = self._make_request(
-            ACTION_GET_TRAFFIC_METER,
-            SOAP_TRAFFIC_METER.format(session_id=SESSION_ID))
+        success, response = self._make_request(SERVICE_DEVICE_CONFIG,
+                                               "GetTrafficMeterStatistics")
 
         if not success:
             return None
@@ -227,21 +223,28 @@ class Netgear(object):
         # parse XML, see capture/trafficmeter.response
         root = ET.fromstring(response)
         namespace = {
-            "m": "urn:NETGEAR-ROUTER:service:DeviceConfig:1",
+            "m": SERVICE_PREFIX + SERVICE_DEVICE_CONFIG,
             "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
         }
         data = root.find(".//m:GetTrafficMeterStatisticsResponse", namespace)
         trafficdict = {t.tag: parse_text(t.text) for t in data}
         return trafficdict
 
-    def _make_request(self, action, message, try_login_after_failure=True):
+    def _make_request(self, service, method, body="",
+                      try_login_after_failure=True):
         """Make an API request to the router."""
         # If we are not logged in, the request will fail for sure.
         if not self.logged_in and try_login_after_failure:
             if not self.login():
                 return False, ""
 
-        headers = _get_soap_header(action)
+        headers = _get_soap_header(service, method)
+
+        if not body:
+            body = CALL_BODY.format(service=SERVICE_PREFIX + service,
+                                    method=method)
+
+        message = SOAP_REQUEST.format(session_id=SESSION_ID, body=body)
 
         try:
             req = requests.post(self.soap_url, headers=headers,
@@ -279,7 +282,8 @@ def xml_get(e, name):
     return None
 
 
-def _get_soap_header(action):
+def _get_soap_header(service, method):
+    action = SERVICE_PREFIX + service + "#" + method
     return {"SOAPAction": action}
 
 
@@ -316,79 +320,38 @@ def autodetect_url():
 
     return None
 
-
-ACTION_LOGIN = "urn:NETGEAR-ROUTER:service:ParentalControl:1#Authenticate"
-ACTION_GET_ATTACHED_DEVICES = \
-    "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice"
-ACTION_GET_ATTACHED_DEVICES_2 = \
-    "urn:NETGEAR-ROUTER:service:DeviceInfo:1#GetAttachDevice2"
-ACTION_GET_TRAFFIC_METER = \
-    "urn:NETGEAR-ROUTER:service:DeviceConfig:1#GetTrafficMeterStatistics"
+SERVICE_PREFIX = "urn:NETGEAR-ROUTER:service:"
+SERVICE_DEVICE_INFO = "DeviceInfo:1"
+SERVICE_DEVICE_CONFIG = "DeviceConfig:1"
 
 REGEX_ATTACHED_DEVICES = r"<NewAttachDevice>(.*)</NewAttachDevice>"
 
 # Until we know how to generate it, give the one we captured
 SESSION_ID = "A7D88AE69687E58D9A00"
 
-SOAP_LOGIN = """<?xml version="1.0" encoding="utf-8" ?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+SOAP_REQUEST = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
+  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
 <SOAP-ENV:Header>
-<SessionID xsi:type="xsd:string"
-  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">{session_id}</SessionID>
+<SessionID>{session_id}</SessionID>
 </SOAP-ENV:Header>
-<SOAP-ENV:Body>
+{body}
+</SOAP-ENV:Envelope>
+"""
+
+LOGIN_BODY = """<SOAP-ENV:Body>
 <Authenticate>
   <NewUsername>{username}</NewUsername>
   <NewPassword>{password}</NewPassword>
 </Authenticate>
-</SOAP-ENV:Body>
-</SOAP-ENV:Envelope>"""
+</SOAP-ENV:Body>"""
 
-SOAP_ATTACHED_DEVICES = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
-  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-<SOAP-ENV:Header>
-<SessionID>{session_id}</SessionID>
-</SOAP-ENV:Header>
-<SOAP-ENV:Body>
-<M1:GetAttachDevice xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
-</M1:GetAttachDevice>
-</SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-"""
-
-SOAP_ATTACHED_DEVICES_2 = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
-  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-<SOAP-ENV:Header>
-<SessionID>{session_id}</SessionID>
-</SOAP-ENV:Header>
-<SOAP-ENV:Body>
-<M1:GetAttachDevice2 xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceInfo:1">
-</M1:GetAttachDevice2>
-</SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-"""
-
-SOAP_TRAFFIC_METER = """
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAPSDK1="http://www.w3.org/2001/XMLSchema"
-  xmlns:SOAPSDK2="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:SOAPSDK3="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-<SOAP-ENV:Header>
-<SessionID>{session_id}</SessionID>
-</SOAP-ENV:Header>
-<SOAP-ENV:Body>
-<M1:GetTrafficMeterStatistics\
-xmlns:M1="urn:NETGEAR-ROUTER:service:DeviceConfig:1"></M1:GetTrafficMeterStatistics>
-</SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-"""
+CALL_BODY = """<SOAP-ENV:Body>
+<M1:{method} xmlns:M1="{service}">
+</M1:{method}>
+</SOAP-ENV:Body>"""
 
 UNKNOWN_DEVICE_DECODED = '<unknown>'
 UNKNOWN_DEVICE_ENCODED = '&lt;unknown&gt;'
