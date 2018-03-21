@@ -9,7 +9,8 @@ If you are connected to the network of the Netgear router, a host is optional.
 If you are connected via a wired connection to the Netgear router, a password is optional.
 The username defaults to admin.
 The port defaults to 5000.
-You can specify url and it will take precedence on host and port parameters.
+The ssl defaults to false.
+You can specify url and it will take precedence on host/port/ssl parameters.
 This allows the use of HTTPS, `https://orbilogin.com` for example.
 
 It currently supports the following operations:
@@ -36,7 +37,7 @@ You can install PyNetgear from PyPi using `pip3 install pynetgear` (use `pip` if
 Usage
 -----
 To test run from the console:
-`$ python -m pynetgear [<pass>] [<host>] [<user>] [<port>]`
+`$ python -m pynetgear [<pass>] [<host>] [<user>] [<port>] [<ssl>]`
 
 To use within your Python scripts:
 ```python
