@@ -26,7 +26,7 @@ class Netgear(object):
     """Represents a session to a Netgear Router."""
 
     def __init__(self, password=None, host=None, user=None, port=None,
-                 url=None):
+                 ssl=False, url=None):
         """Initialize a Netgear session."""
         if not url and not host and not port:
             url = autodetect_url()
@@ -38,7 +38,9 @@ class Netgear(object):
                 host = DEFAULT_HOST
             if not port:
                 port = DEFAULT_PORT
-            self.soap_url = "http://{}:{}/soap/server_sa/".format(host, port)
+            scheme = "https" if ssl else "http"
+            self.soap_url = "{}://{}:{}/soap/server_sa/".format(scheme,
+                                                                host, port)
 
         if not user:
             user = DEFAULT_USER
