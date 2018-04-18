@@ -311,7 +311,7 @@ def autodetect_url():
                 "http://routerlogin.net"]:
         try:
             r = requests.get(url + "/soap/server_sa/",
-                             headers=_get_soap_header("test"),
+                             headers=_get_soap_header("Test:1", "test"),
                              verify=False)
             if r.status_code == 200:
                 return url
