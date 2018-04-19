@@ -54,6 +54,8 @@ Supported routers
 It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router. According to the NETGEAR Genie app description, the following routers should work:
 
  * Netgear Orbi
+ * Netgear R7800
+ * Netgear R7500v2
  * Netgear R7000
  * Netgear R6900
  * Netgear R6300
