@@ -19,8 +19,6 @@ Device = namedtuple(
                "allow_or_block", "device_type", "device_model",
                "ssid", "conn_ap_mac"])
 
-ATTACHED_DEVICES_NODE_XPATH = ".//m:GetAttachDevice2Response/NewAttachDevice"
-
 
 class Netgear(object):
     """Represents a session to a Netgear Router."""
@@ -76,35 +74,28 @@ class Netgear(object):
         """
         _LOGGER.info("Get attached devices")
 
-        def parse_response(response):
-            try:
-                result = re.search(REGEX_ATTACHED_DEVICES, response).group(1)
-            except (AttributeError):
-                _LOGGER.error("Error parsing respone: %s", response)
-                return False, None
-            else:
-                return True, result
-
         success, response = self._make_request(SERVICE_DEVICE_INFO,
                                                "GetAttachDevice")
 
         if not success:
             return None
 
-        parsable, raw = parse_response(response)
-
-        if not parsable:
+        success, node = _parse_xml_response(
+            response, SERVICE_DEVICE_INFO,
+            ".//m:GetAttachDeviceResponse/NewAttachDevice")
+        if not success:
             return None
 
         # Netgear inserts a double-encoded value for "unknown" devices
-        decoded = raw.replace(UNKNOWN_DEVICE_ENCODED, UNKNOWN_DEVICE_DECODED)
+        decoded = node.text.replace(UNKNOWN_DEVICE_ENCODED,
+                                    UNKNOWN_DEVICE_DECODED)
 
         entries = decoded.split("@")
         devices = []
 
         # First element is the total device count
         if len(entries) > 1:
-            entry_count = convert(entries.pop(0), int)
+            entry_count = _convert(entries.pop(0), int)
         else:
             _LOGGER.error("Error parsing device-list: %s", entries)
             return None
@@ -130,8 +121,8 @@ class Netgear(object):
                 allow_or_block = info[7]
             if len(info) >= 7:
                 link_type = info[4]
-                link_rate = convert(info[5], int)
-                signal = convert(info[6], int)
+                link_rate = _convert(info[5], int)
+                signal = _convert(info[6], int)
 
             if len(info) < 4:
                 _LOGGER.warning("Unexpected entry: %s", info)
@@ -157,35 +148,29 @@ class Netgear(object):
 
         success, response = self._make_request(SERVICE_DEVICE_INFO,
                                                "GetAttachDevice2")
-
         if not success:
             return None
 
-        root = ET.fromstring(response)
-        namespace = {
-            "m": SERVICE_PREFIX + SERVICE_DEVICE_INFO,
-            "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
-        }
-
-        devices_node = root.find(ATTACHED_DEVICES_NODE_XPATH, namespace)
-        if not devices_node:
-            _LOGGER.error("Error parsing response: %s", response)
+        success, devices_node = _parse_xml_response(
+            response, SERVICE_DEVICE_INFO,
+            ".//m:GetAttachDevice2Response/NewAttachDevice")
+        if not success:
             return None
 
-        xml_devices = devices_node.findall("Device", namespace)
+        xml_devices = devices_node.findall("Device")
         devices = []
         for d in xml_devices:
-            ip = xml_get(d, 'IP')
-            name = xml_get(d, 'Name')
-            mac = xml_get(d, 'MAC')
-            signal = convert(xml_get(d, 'SignalStrength'), int)
-            link_type = xml_get(d, 'ConnectionType')
-            link_rate = xml_get(d, 'Linkspeed')
-            allow_or_block = xml_get(d, 'AllowOrBlock')
-            device_type = convert(xml_get(d, 'DeviceType'), int)
-            device_model = xml_get(d, 'DeviceModel')
-            ssid = xml_get(d, 'SSID')
-            conn_ap_mac = xml_get(d, 'ConnAPMAC')
+            ip = _xml_get(d, 'IP')
+            name = _xml_get(d, 'Name')
+            mac = _xml_get(d, 'MAC')
+            signal = _convert(_xml_get(d, 'SignalStrength'), int)
+            link_type = _xml_get(d, 'ConnectionType')
+            link_rate = _xml_get(d, 'Linkspeed')
+            allow_or_block = _xml_get(d, 'AllowOrBlock')
+            device_type = _convert(_xml_get(d, 'DeviceType'), int)
+            device_model = _xml_get(d, 'DeviceModel')
+            ssid = _xml_get(d, 'SSID')
+            conn_ap_mac = _xml_get(d, 'ConnAPMAC')
             devices.append(Device(signal, ip, name, mac, link_type, link_rate,
                                   allow_or_block, device_type, device_model,
                                   ssid, conn_ap_mac))
@@ -217,21 +202,19 @@ class Netgear(object):
                     return float(text)
             except ValueError:
                 return None
+
         success, response = self._make_request(SERVICE_DEVICE_CONFIG,
                                                "GetTrafficMeterStatistics")
-
         if not success:
             return None
 
-        # parse XML, see capture/trafficmeter.response
-        root = ET.fromstring(response)
-        namespace = {
-            "m": SERVICE_PREFIX + SERVICE_DEVICE_CONFIG,
-            "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
-        }
-        data = root.find(".//m:GetTrafficMeterStatisticsResponse", namespace)
-        trafficdict = {t.tag: parse_text(t.text) for t in data}
-        return trafficdict
+        success, node = _parse_xml_response(
+            response, SERVICE_DEVICE_CONFIG,
+            ".//m:GetTrafficMeterStatisticsResponse")
+        if not success:
+            return None
+
+        return {t.tag: parse_text(t.text) for t in node}
 
     def _make_request(self, service, method, body="",
                       try_login_after_failure=True):
@@ -273,7 +256,42 @@ class Netgear(object):
             return False, ""
 
 
-def xml_get(e, name):
+def autodetect_url():
+    """
+    Try to autodetect the base URL of the router SOAP service.
+
+    Returns None if it can't be found.
+    """
+    for url in ["http://routerlogin.net:5000", "https://routerlogin.net",
+                "http://routerlogin.net"]:
+        try:
+            r = requests.get(url + "/soap/server_sa/",
+                             headers=_get_soap_header("Test:1", "test"),
+                             verify=False)
+            if r.status_code == 200:
+                return url
+        except:
+            pass
+
+    return None
+
+
+def _parse_xml_response(response, service_name, xpath):
+    root = ET.fromstring(response)
+    namespace = {
+        "m": SERVICE_PREFIX + service_name,
+        "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
+    }
+
+    node = root.find(xpath, namespace)
+    if node is None:
+        _LOGGER.error("Error parsing xml response: %s", response)
+        return False, None
+
+    return True, node
+
+
+def _xml_get(e, name):
     """
     Returns the value of the subnode "name" of element e.
 
@@ -295,33 +313,13 @@ def _is_valid_response(resp):
             "<ResponseCode>000</ResponseCode>" in resp.text)
 
 
-def convert(value, to_type, default=None):
+def _convert(value, to_type, default=None):
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
     except ValueError:
         # If value could not be converted
         return default
-
-
-def autodetect_url():
-    """
-    Try to autodetect the base URL of the router SOAP service.
-
-    Returns None if it can't be found.
-    """
-    for url in ["http://routerlogin.net:5000", "https://routerlogin.net",
-                "http://routerlogin.net"]:
-        try:
-            r = requests.get(url + "/soap/server_sa/",
-                             headers=_get_soap_header("Test:1", "test"),
-                             verify=False)
-            if r.status_code == 200:
-                return url
-        except:
-            pass
-
-    return None
 
 SERVICE_PREFIX = "urn:NETGEAR-ROUTER:service:"
 SERVICE_DEVICE_INFO = "DeviceInfo:1"
