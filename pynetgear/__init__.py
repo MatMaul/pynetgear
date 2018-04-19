@@ -1,7 +1,6 @@
 """Module to communicate with Netgear routers using the SOAP v2 API."""
 from __future__ import print_function
 
-import re
 from collections import namedtuple
 import logging
 import xml.etree.ElementTree as ET
