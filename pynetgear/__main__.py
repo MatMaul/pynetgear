@@ -7,6 +7,8 @@ def main():
     """Scan for devices and print results."""
     netgear = Netgear(*sys.argv[1:])
 
+    print(netgear.get_traffic_meter())
+
     devices = netgear.get_attached_devices()
 
     if devices is None:
