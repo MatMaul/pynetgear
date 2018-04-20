@@ -79,7 +79,7 @@ class Netgear(object):
         if not success:
             return None
 
-        success, node = _parse_xml_response(
+        success, node = _find_node(
             response, SERVICE_DEVICE_INFO,
             ".//m:GetAttachDeviceResponse/NewAttachDevice")
         if not success:
@@ -150,7 +150,7 @@ class Netgear(object):
         if not success:
             return None
 
-        success, devices_node = _parse_xml_response(
+        success, devices_node = _find_node(
             response, SERVICE_DEVICE_INFO,
             ".//m:GetAttachDevice2Response/NewAttachDevice")
         if not success:
@@ -207,7 +207,7 @@ class Netgear(object):
         if not success:
             return None
 
-        success, node = _parse_xml_response(
+        success, node = _find_node(
             response, SERVICE_DEVICE_CONFIG,
             ".//m:GetTrafficMeterStatisticsResponse")
         if not success:
@@ -275,7 +275,7 @@ def autodetect_url():
     return None
 
 
-def _parse_xml_response(response, service_name, xpath):
+def _find_node(response, service_name, xpath):
     root = ET.fromstring(response)
     namespace = {
         "m": SERVICE_PREFIX + service_name,
@@ -284,7 +284,7 @@ def _parse_xml_response(response, service_name, xpath):
 
     node = root.find(xpath, namespace)
     if node is None:
-        _LOGGER.error("Error parsing xml response: %s", response)
+        _LOGGER.error("Error finding node in response: %s", response)
         return False, None
 
     return True, node
