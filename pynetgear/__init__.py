@@ -59,7 +59,7 @@ class Netgear(object):
                                  password=self.password)
 
         success, _ = self._make_request("ParentalControl:1", "Authenticate",
-                                        body, False)
+                                        None, body, False)
 
         self.logged_in = success
 
@@ -215,7 +215,7 @@ class Netgear(object):
 
         return {t.tag: parse_text(t.text) for t in node}
 
-    def _make_request(self, service, method, body="",
+    def _make_request(self, service, method, params=None, body="",
                       try_login_after_failure=True):
         """Make an API request to the router."""
         # If we are not logged in, the request will fail for sure.
@@ -226,8 +226,16 @@ class Netgear(object):
         headers = _get_soap_header(service, method)
 
         if not body:
+            if not params:
+                params = ""
+            if isinstance(params, dict):
+                map = params
+                params = ""
+                for k in map:
+                    params += "<" + k + ">" + map[k] + "</" + k + ">\n"
+
             body = CALL_BODY.format(service=SERVICE_PREFIX + service,
-                                    method=method)
+                                    method=method, params=params)
 
         message = SOAP_REQUEST.format(session_id=SESSION_ID, body=body)
 
@@ -350,7 +358,7 @@ LOGIN_BODY = """<SOAP-ENV:Body>
 
 CALL_BODY = """<SOAP-ENV:Body>
 <M1:{method} xmlns:M1="{service}">
-</M1:{method}>
+{params}</M1:{method}>
 </SOAP-ENV:Body>"""
 
 UNKNOWN_DEVICE_DECODED = '<unknown>'
