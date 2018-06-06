@@ -1,6 +1,7 @@
 """Module to communicate with Netgear routers using the SOAP v2 API."""
 from __future__ import print_function
 
+from io import StringIO
 from collections import namedtuple
 import logging
 import xml.etree.ElementTree as ET
@@ -80,8 +81,8 @@ class Netgear(object):
             return None
 
         success, node = _find_node(
-            response, SERVICE_DEVICE_INFO,
-            ".//m:GetAttachDeviceResponse/NewAttachDevice")
+            response,
+            ".//GetAttachDeviceResponse/NewAttachDevice")
         if not success:
             return None
 
@@ -151,8 +152,8 @@ class Netgear(object):
             return None
 
         success, devices_node = _find_node(
-            response, SERVICE_DEVICE_INFO,
-            ".//m:GetAttachDevice2Response/NewAttachDevice")
+            response,
+            ".//GetAttachDevice2Response/NewAttachDevice")
         if not success:
             return None
 
@@ -208,8 +209,8 @@ class Netgear(object):
             return None
 
         success, node = _find_node(
-            response, SERVICE_DEVICE_CONFIG,
-            ".//m:GetTrafficMeterStatisticsResponse")
+            response,
+            ".//GetTrafficMeterStatisticsResponse")
         if not success:
             return None
 
@@ -283,14 +284,14 @@ def autodetect_url():
     return None
 
 
-def _find_node(response, service_name, xpath):
-    root = ET.fromstring(response)
-    namespace = {
-        "m": SERVICE_PREFIX + service_name,
-        "SOAP-ENV": "http://schemas.xmlsoap.org/soap/envelope/"
-    }
-
-    node = root.find(xpath, namespace)
+def _find_node(response, xpath):
+    it = ET.iterparse(StringIO(response))
+    # strip all namespaces
+    for _, el in it:
+        if '}' in el.tag:
+            el.tag = el.tag.split('}', 1)[1]
+    root = it.root
+    node = root.find(xpath)
     if node is None:
         _LOGGER.error("Error finding node in response: %s", response)
         return False, None
