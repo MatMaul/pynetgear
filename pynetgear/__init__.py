@@ -290,8 +290,7 @@ def _find_node(response, xpath):
     for _, el in it:
         if '}' in el.tag:
             el.tag = el.tag.split('}', 1)[1]
-    root = it.root
-    node = root.find(xpath)
+    node = it.root.find(xpath)
     if node is None:
         _LOGGER.error("Error finding node in response: %s", response)
         return False, None
