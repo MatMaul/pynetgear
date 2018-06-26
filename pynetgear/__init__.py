@@ -90,6 +90,8 @@ class Netgear(object):
         decoded = node.text.replace(UNKNOWN_DEVICE_ENCODED,
                                     UNKNOWN_DEVICE_DECODED)
 
+        _LOGGER.warning("devices string: %s", decoded)
+
         entries = decoded.split("@")
         devices = []
 
