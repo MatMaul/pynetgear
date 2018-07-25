@@ -100,7 +100,7 @@ class Netgear(object):
             _LOGGER.error("Error parsing device-list: %s", entries)
             return None
 
-        if(entry_count != len(entries)):
+        if entry_count is not None and entry_count != len(entries):
             _LOGGER.warning(
                 """Number of devices should \
                  be: %d but is: %d""", entry_count, len(entries))
