@@ -86,12 +86,16 @@ class Netgear(object):
         if not success:
             return None
 
+        devices = []
+
         # Netgear inserts a double-encoded value for "unknown" devices
-        decoded = node.text.replace(UNKNOWN_DEVICE_ENCODED,
-                                    UNKNOWN_DEVICE_DECODED)
+        decoded = node.text.strip().replace(UNKNOWN_DEVICE_ENCODED,
+                                            UNKNOWN_DEVICE_DECODED)
+
+        if not decoded or decoded == "0":
+            return devices
 
         entries = decoded.split("@")
-        devices = []
 
         # First element is the total device count
         if len(entries) > 1:
