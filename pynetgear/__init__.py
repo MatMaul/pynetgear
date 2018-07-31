@@ -98,11 +98,9 @@ class Netgear(object):
         entries = decoded.split("@")
 
         # First element is the total device count
+        entry_count = None
         if len(entries) > 1:
             entry_count = _convert(entries.pop(0), int)
-        else:
-            _LOGGER.error("Error parsing device-list: %s", entries)
-            return None
 
         if entry_count is not None and entry_count != len(entries):
             _LOGGER.warning(
