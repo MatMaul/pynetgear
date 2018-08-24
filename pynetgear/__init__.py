@@ -314,7 +314,17 @@ def _xml_get(e, name):
 
 def _get_soap_header(service, method):
     action = SERVICE_PREFIX + service + "#" + method
-    return {"SOAPAction": action}
+    return {
+        "Accept": "text/xml",
+        "SOAPAction": action,
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Accept-Encoding": "gzip",
+        "Accept-Language": "zh-CN,en,*",
+        "Content-Type": "multipart/form-data",
+        "User-Agent": "SOAP Toolkit 3.0",
+        "Host": "routerlogin.net:5000"
+    }
 
 
 def _is_valid_response(resp):
