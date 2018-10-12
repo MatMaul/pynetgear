@@ -397,7 +397,8 @@ def _get_soap_headers(service, method):
 
 def _is_valid_response(resp):
     return (resp.status_code == 200 and
-            "<ResponseCode>000</ResponseCode>" in resp.text)
+            ("<ResponseCode>0000</ResponseCode>" in resp.text or 
+            "<ResponseCode>000</ResponseCode>" in resp.text))
 
 
 def _is_unauthorized_response(resp):
