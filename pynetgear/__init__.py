@@ -79,7 +79,11 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        return self.login_v2()
+        v1_result = self.login_v1()
+        if v1_result is not any([None, False]):
+            return v1_result
+        else:
+            return self.login_v2()
 
     def login_v2(self):
         _LOGGER.info("Login v2")
@@ -374,6 +378,7 @@ def _get_soap_headers(service, method):
         "Cache-Control": "no-cache",
         "User-Agent":    "pynetgear",
         "Connection":    "Keep-Alive",
+        "Content-Type":  "application/xml"
     }
 
 
