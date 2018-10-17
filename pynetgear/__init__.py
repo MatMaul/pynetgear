@@ -17,8 +17,8 @@ import requests
 if sys.version_info[0] == 3:
     unichr = chr
 _illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
-                        (0x7F, 0x84), (0x86, 0x9F),
-                        (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+                    (0x7F, 0x84), (0x86, 0x9F),
+                    (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
 if sys.maxunicode >= 0x10000:  # not narrow build
     _illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
                              (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
@@ -71,7 +71,7 @@ class Netgear(object):
         self.username = user
         self.password = password
         self.port = port
-        self.logged_in = False
+        self.cookie = None
 
     def login(self):
         """
@@ -79,17 +79,35 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        _LOGGER.info("Login")
+        return self.login_v2()
 
-        body = LOGIN_BODY.format(username=self.username,
-                                 password=self.password)
+    def login_v2(self):
+        _LOGGER.info("Login v2")
+
+        success, response = self._make_request(SERVICE_DEVICE_CONFIG, "SOAPLogin",
+                                               {"Username": self.username, "Password": self.password},
+                                               None, False)
+        if not success:
+            return None
+
+        if 'Set-Cookie' in response.headers:
+            self.cookie = response.headers['Set-Cookie']
+
+        return self.cookie
+
+    def login_v1(self):
+        _LOGGER.info("Login v1")
+
+        body = LOGIN_V1_BODY.format(username=self.username,
+                                    password=self.password)
 
         success, _ = self._make_request("ParentalControl:1", "Authenticate",
                                         None, body, False)
 
-        self.logged_in = success
+        if success:
+            self.cookie = True
 
-        return self.logged_in
+        return self.cookie
 
     def get_attached_devices(self):
         """
@@ -106,7 +124,7 @@ class Netgear(object):
             return None
 
         success, node = _find_node(
-            response,
+            response.text,
             ".//GetAttachDeviceResponse/NewAttachDevice")
         if not success:
             return None
@@ -179,7 +197,7 @@ class Netgear(object):
             return None
 
         success, devices_node = _find_node(
-            response,
+            response.text,
             ".//GetAttachDevice2Response/NewAttachDevice")
         if not success:
             return None
@@ -236,31 +254,40 @@ class Netgear(object):
             return None
 
         success, node = _find_node(
-            response,
+            response.text,
             ".//GetTrafficMeterStatisticsResponse")
         if not success:
             return None
 
         return {t.tag: parse_text(t.text) for t in node}
 
-    def _make_request(self, service, method, params=None, body="",
-                      try_login_after_failure=True):
-        """Make an API request to the router."""
-        # If we are not logged in, the request will fail for sure.
-        if not self.logged_in and try_login_after_failure:
-            if not self.login():
-                return False, ""
+    def _get_headers(self, service, method, need_auth=True):
+        headers = _get_soap_headers(service, method)
+        # if the stored cookie is not a str then we are
+        # probably using the old login method
+        if need_auth and isinstance(self.cookie, str):
+            headers["Cookie"] = self.cookie
+        return headers
 
-        headers = _get_soap_header(service, method)
+    def _make_request(self, service, method, params=None, body="",
+                      need_auth=True):
+        """Make an API request to the router."""
+        # If we have no cookie (v2) or never called login before (v1)
+        # and we need auth, the request will fail for sure.
+        if need_auth and not self.cookie:
+            if not self.login():
+                return False, None
+
+        headers = self._get_headers(service, method, need_auth)
 
         if not body:
             if not params:
                 params = ""
             if isinstance(params, dict):
-                map = params
+                _map = params
                 params = ""
-                for k in map:
-                    params += "<" + k + ">" + map[k] + "</" + k + ">\n"
+                for k in _map:
+                    params += "<" + k + ">" + _map[k] + "</" + k + ">\n"
 
             body = CALL_BODY.format(service=SERVICE_PREFIX + service,
                                     method=method, params=params)
@@ -271,24 +298,26 @@ class Netgear(object):
             req = requests.post(self.soap_url, headers=headers,
                                 data=message, timeout=30, verify=False)
 
-            success = _is_valid_response(req)
+            if _is_unauthorized_response(req):
+                # let's discard the cookie because it probably expired (v2)
+                # or the IP-bound (?) session expired (v1)
+                self.cookie = None
 
-            if not success and try_login_after_failure:
-                self.login()
+                # let's login and retry
+                if self.login():
+                    req = requests.post(self.soap_url, headers=headers,
+                                        data=message, timeout=30, verify=False)
+                else:
+                    return False, None
 
-                req = requests.post(self.soap_url, headers=headers,
-                                    data=message, timeout=30, verify=False)
-
-                success = _is_valid_response(req)
-
-            return success, req.text
+            return _is_valid_response(req), req
 
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error talking to API")
 
             # Maybe one day we will distinguish between
             # different errors..
-            return False, ""
+            return False, None
 
 
 def autodetect_url():
@@ -301,7 +330,7 @@ def autodetect_url():
                 "http://routerlogin.net"]:
         try:
             r = requests.get(url + "/soap/server_sa/",
-                             headers=_get_soap_header("Test:1", "test"),
+                             headers=_get_soap_headers("Test:1", "test"),
                              verify=False)
             if r.status_code == 200:
                 return url
@@ -338,14 +367,24 @@ def _xml_get(e, name):
     return None
 
 
-def _get_soap_header(service, method):
+def _get_soap_headers(service, method):
     action = SERVICE_PREFIX + service + "#" + method
-    return {"SOAPAction": action}
+    return {
+        "SOAPAction":    action,
+        "Cache-Control": "no-cache",
+        "User-Agent":    "pynetgear",
+        "Connection":    "Keep-Alive",
+    }
 
 
 def _is_valid_response(resp):
     return (resp.status_code == 200 and
             "<ResponseCode>000</ResponseCode>" in resp.text)
+
+
+def _is_unauthorized_response(resp):
+    return (resp.status_code == 401 or
+            "<ResponseCode>401</ResponseCode>" in resp.text)
 
 
 def _convert(value, to_type, default=None):
@@ -377,7 +416,7 @@ SOAP_REQUEST = """<?xml version="1.0" encoding="utf-8" standalone="no"?>
 </SOAP-ENV:Envelope>
 """
 
-LOGIN_BODY = """<SOAP-ENV:Body>
+LOGIN_V1_BODY = """<SOAP-ENV:Body>
 <Authenticate>
   <NewUsername>{username}</NewUsername>
   <NewPassword>{password}</NewPassword>
