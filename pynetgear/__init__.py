@@ -86,21 +86,26 @@ class Netgear(object):
             return self.login_v1()
 
     def login_v2(self):
-        _LOGGER.info("Login v2")
+        _LOGGER.debug("Login v2")
+        self.cookie = None
 
         success, response = self._make_request(SERVICE_DEVICE_CONFIG, "SOAPLogin",
                                                {"Username": self.username, "Password": self.password},
                                                None, False)
+
         if not success:
             return None
 
         if 'Set-Cookie' in response.headers:
             self.cookie = response.headers['Set-Cookie']
+        else:
+            _LOGGER.error("Login v2 ok but no cookie...")
+            _LOGGER.debug(response.headers)
 
         return self.cookie
 
     def login_v1(self):
-        _LOGGER.info("Login v1")
+        _LOGGER.debug("Login v1")
 
         body = LOGIN_V1_BODY.format(username=self.username,
                                     password=self.password)
@@ -108,10 +113,9 @@ class Netgear(object):
         success, _ = self._make_request("ParentalControl:1", "Authenticate",
                                         None, body, False)
 
-        if success:
-            self.cookie = True
+        self.cookie = success
 
-        return self.cookie
+        return success
 
     def get_attached_devices(self):
         """
@@ -125,6 +129,7 @@ class Netgear(object):
                                                "GetAttachDevice")
 
         if not success:
+            _LOGGER.error("Get attached devices failed")
             return None
 
         success, node = _find_node(
@@ -140,6 +145,8 @@ class Netgear(object):
                                             UNKNOWN_DEVICE_DECODED)
 
         if not decoded or decoded == "0":
+            _LOGGER.error("Can't parse attached devices string")
+            _LOGGER.debug(node.text.strip())
             return devices
 
         entries = decoded.split("@")
@@ -150,7 +157,7 @@ class Netgear(object):
             entry_count = _convert(entries.pop(0), int)
 
         if entry_count is not None and entry_count != len(entries):
-            _LOGGER.warning(
+            _LOGGER.info(
                 """Number of devices should \
                  be: %d but is: %d""", entry_count, len(entries))
 
@@ -299,22 +306,28 @@ class Netgear(object):
         message = SOAP_REQUEST.format(session_id=SESSION_ID, body=body)
 
         try:
-            req = requests.post(self.soap_url, headers=headers,
-                                data=message, timeout=30, verify=False)
+            response = requests.post(self.soap_url, headers=headers,
+                                     data=message, timeout=30, verify=False)
 
-            if _is_unauthorized_response(req):
+            if _is_unauthorized_response(response):
                 # let's discard the cookie because it probably expired (v2)
                 # or the IP-bound (?) session expired (v1)
                 self.cookie = None
 
-                # let's login and retry
+                _LOGGER.warning("Unauthorized response, let's login and retry...")
                 if self.login():
-                    req = requests.post(self.soap_url, headers=headers,
-                                        data=message, timeout=30, verify=False)
+                    response = requests.post(self.soap_url, headers=headers,
+                                             data=message, timeout=30, verify=False)
                 else:
                     return False, None
 
-            return _is_valid_response(req), req
+            success = _is_valid_response(response)
+
+            if not success:
+                _LOGGER.error("Invalid response")
+                _LOGGER.debug("%s\n%s\n%s", response.status_code, str(response.headers), response.text)
+
+            return success, response
 
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error talking to API")
@@ -344,16 +357,17 @@ def autodetect_url():
     return None
 
 
-def _find_node(response, xpath):
-    response = _illegal_xml_chars_RE.sub('', response)
-    it = ET.iterparse(StringIO(response))
+def _find_node(text, xpath):
+    text = _illegal_xml_chars_RE.sub('', text)
+    it = ET.iterparse(StringIO(text))
     # strip all namespaces
     for _, el in it:
         if '}' in el.tag:
             el.tag = el.tag.split('}', 1)[1]
     node = it.root.find(xpath)
     if node is None:
-        _LOGGER.error("Error finding node in response: %s", response)
+        _LOGGER.error("Error finding node in XML response")
+        _LOGGER.debug(text)
         return False, None
 
     return True, node
