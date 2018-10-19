@@ -37,6 +37,8 @@ _illegal_xml_chars_RE = re.compile(u'[%s]' % u''.join(_illegal_ranges))
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
 DEFAULT_PORT = 5000
+BLOCK = "Block"
+ALLOW = "Allow"
 _LOGGER = logging.getLogger(__name__)
 
 Device = namedtuple(
@@ -280,10 +282,8 @@ class Netgear(object):
         """
         _LOGGER.info("Config start")
 
-        message = "<NewSessionID>{session_id}</NewSessionID>".format(session_id=SESSION_ID)
-
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "ConfigurationStarted", message)
+            SERVICE_DEVICE_CONFIG, "ConfigurationStarted", {"NewSessionID":SESSION_ID})
         
         self.config_started = success
         return success
@@ -297,15 +297,13 @@ class Netgear(object):
         if not self.config_started:
         	return True
 
-        message = "<NewStatus>ChangesApplied</NewStatus>"
-
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "ConfigurationFinished", message)
+            SERVICE_DEVICE_CONFIG, "ConfigurationFinished", {"NewStatus": "ChangesApplied"})
         
         self.config_started = not success
         return success
     
-    def allow_block_device(self, mac_addr, device_status='Block'):
+    def allow_block_device(self, mac_addr, device_status=BLOCK):
         """
         Allow or Block a device via its Mac Address.
         Pass in the mac address for the device that you want to set. Pass in the 
@@ -321,12 +319,9 @@ class Netgear(object):
         	_LOGGER.error("Could not start configuration")
         	return False
             
-        message = """<NewAllowOrBlock>{device_status}</NewAllowOrBlock>
-            <NewMACAddress>{mac_addr}</NewMACAddress>""".format(device_status=device_status, 
-                                                                mac_addr=mac_addr)
-        
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "SetBlockDeviceByMAC", message)
+            SERVICE_DEVICE_CONFIG, "SetBlockDeviceByMAC",
+            {"NewAllowOrBlock": device_status, "NewMACAddress": mac_addr})
         
         if not success:
         	_LOGGER.error("Could not successfully call allow/block device")
