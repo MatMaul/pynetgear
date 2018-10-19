@@ -29,6 +29,10 @@ This call is slower and probably heavier on the router load.
 **get_traffic_meter**<br>
 Return a dict containing the traffic meter information from the router (if enabled in the webinterface).
 
+**allow_block_device**<br>
+Allows user to block/unblock devices from accessing router by specifying mac_addr and new device_status (Block/Allow)
+**Note:** In order to use this function, Remote Management _must_ be enabled in the router's admin settings.
+
 Installation
 ------------
 
@@ -62,6 +66,7 @@ It has been tested with the Netgear R6300 router and the Netgear WNDR4500 router
  * Netgear R6250
  * Netgear R6200
  * Netgear R6100
+ * Netgear N300 - Model: C3000 (Port 80)
  * Netgear Centria (WNDR4700, WND4720)
  * Netgear WNDR4500
  * Netgear WNDR4300
