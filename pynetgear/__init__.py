@@ -303,7 +303,7 @@ class Netgear(object):
             SERVICE_DEVICE_CONFIG, "ConfigurationFinished", message)
         
         self.config_started = not success
-        return not success
+        return success
     
     def allow_block_device(self, mac_addr, device_status='Block'):
         """
