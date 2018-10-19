@@ -294,7 +294,7 @@ class Netgear(object):
         Tells the router we're done managing admin functionality.
         """
         _LOGGER.info("Config finish")
-        if not self.config_started
+        if not self.config_started:
         	return True
 
         message = "<NewStatus>ChangesApplied</NewStatus>"
