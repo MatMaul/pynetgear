@@ -39,6 +39,10 @@ DEFAULT_USER = 'admin'
 DEFAULT_PORT = 5000
 _LOGGER = logging.getLogger(__name__)
 
+
+BLOCK = "Block"
+ALLOW = "Allow"
+
 Device = namedtuple(
     "Device", ["signal", "ip", "name", "mac", "type", "link_rate",
                "allow_or_block", "device_type", "device_model",
@@ -72,6 +76,7 @@ class Netgear(object):
         self.password = password
         self.port = port
         self.cookie = None
+        self.config_started = False
 
     def login(self):
         """
@@ -271,6 +276,64 @@ class Netgear(object):
             return None
 
         return {t.tag: parse_text(t.text) for t in node}
+
+    def config_start(self):
+        """
+        Start a configuration session.
+        For managing router admin functionality (ie allowing/blocking devices)
+        """
+        _LOGGER.info("Config start")
+
+        success, _ = self._make_request(
+            SERVICE_DEVICE_CONFIG, "ConfigurationStarted", {"NewSessionID": SESSION_ID})
+
+        self.config_started = success
+        return success
+
+    def config_finish(self):
+        """
+        End of a configuration session.
+        Tells the router we're done managing admin functionality.
+        """
+        _LOGGER.info("Config finish")
+        if not self.config_started:
+            return True
+
+        success, _ = self._make_request(
+            SERVICE_DEVICE_CONFIG, "ConfigurationFinished", {"NewStatus": "ChangesApplied"})
+
+        self.config_started = not success
+        return success
+
+    def allow_block_device(self, mac_addr, device_status=BLOCK):
+        """
+        Allow or Block a device via its Mac Address.
+        Pass in the mac address for the device that you want to set. Pass in the
+        device_status you wish to set the device to: Allow (allow device to access the
+        network) or Block (block the device from accessing the network).
+        """
+        _LOGGER.info("Allow block device")
+        if self.config_started:
+            _LOGGER.error("Inconsistant configuration state, configuration already started")
+            return False
+
+        if not self.config_start():
+            _LOGGER.error("Could not start configuration")
+            return False
+
+        success, _ = self._make_request(
+            SERVICE_DEVICE_CONFIG, "SetBlockDeviceByMAC",
+            {"NewAllowOrBlock": device_status, "NewMACAddress": mac_addr})
+
+        if not success:
+            _LOGGER.error("Could not successfully call allow/block device")
+            return False
+
+        if not self.config_finish():
+            _LOGGER.error("Inconsistant configuration state, configuration already finished")
+            return False
+
+        return True
 
     def _get_headers(self, service, method, need_auth=True):
         headers = _get_soap_headers(service, method)
