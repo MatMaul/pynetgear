@@ -18,5 +18,6 @@ def main():
         for i in devices:
             print(i)
 
+
 if __name__ == '__main__':
     main()

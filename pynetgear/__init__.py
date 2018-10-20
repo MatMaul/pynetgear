@@ -351,7 +351,7 @@ def autodetect_url():
                              verify=False)
             if r.status_code == 200:
                 return url
-        except:
+        except requests.exceptions.RequestException:
             pass
 
     return None
@@ -397,8 +397,8 @@ def _get_soap_headers(service, method):
 
 def _is_valid_response(resp):
     return (resp.status_code == 200 and
-            ("<ResponseCode>0000</ResponseCode>" in resp.text or 
-            "<ResponseCode>000</ResponseCode>" in resp.text))
+            ("<ResponseCode>0000</ResponseCode>" in resp.text or
+             "<ResponseCode>000</ResponseCode>" in resp.text))
 
 
 def _is_unauthorized_response(resp):
@@ -413,6 +413,7 @@ def _convert(value, to_type, default=None):
     except ValueError:
         # If value could not be converted
         return default
+
 
 SERVICE_PREFIX = "urn:NETGEAR-ROUTER:service:"
 SERVICE_DEVICE_INFO = "DeviceInfo:1"

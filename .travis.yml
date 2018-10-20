@@ -1,9 +1,9 @@
 language: python
 python:
-  - '3.4'
+  - '3.3'
   - '2.7'
 
 before_install:
-  - pip install pep8
+  - pip install flake8
 script:
-  - find . -name \*.py -exec pep8 --max-line-length=120 {} +
+  - find pynetgear -name \*.py -exec flake8 --max-line-length=120 {} +
