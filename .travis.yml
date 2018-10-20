@@ -6,4 +6,4 @@ python:
 before_install:
   - pip install flake8
 script:
-  - find pynetgear -name \*.py -exec flake8 --max-line-length=120 {} +
+  - flake8 pynetgear
