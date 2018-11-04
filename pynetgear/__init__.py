@@ -372,7 +372,7 @@ class Netgear(object):
             response = requests.post(self.soap_url, headers=headers,
                                      data=message, timeout=30, verify=False)
 
-            if _is_unauthorized_response(response):
+            if need_auth and _is_unauthorized_response(response):
                 # let's discard the cookie because it probably expired (v2)
                 # or the IP-bound (?) session expired (v1)
                 self.cookie = None
@@ -381,8 +381,6 @@ class Netgear(object):
                 if self.login():
                     response = requests.post(self.soap_url, headers=headers,
                                              data=message, timeout=30, verify=False)
-                else:
-                    return False, None
 
             success = _is_valid_response(response)
 
