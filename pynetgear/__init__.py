@@ -77,6 +77,7 @@ class Netgear(object):
         self.port = port
         self.cookie = None
         self.config_started = False
+        self.login_impl = None
 
     def login(self):
         """
@@ -84,11 +85,18 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        v2_result = self.login_v2()
-        if v2_result:
-            return v2_result
-        else:
-            return self.login_v1()
+        if self.login_impl:
+            return self.login_impl()
+
+        result = self.login_v2()
+        if result:
+            self.login_impl = self.login_v2
+            return result
+
+        result = self.login_v1()
+        if result:
+            self.login_impl = self.login_v1
+            return result
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
