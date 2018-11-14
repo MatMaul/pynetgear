@@ -102,12 +102,9 @@ class Netgear(object):
         _LOGGER.debug("Login v2")
         self.cookie = None
 
-        success, response = self._make_request(SERVICE_DEVICE_CONFIG, "SOAPLogin",
-                                               {"Username": self.username, "Password": self.password},
-                                               None, False)
-
-        if not success:
-            return None
+        _, response = self._make_request(SERVICE_DEVICE_CONFIG, "SOAPLogin",
+                                         {"Username": self.username, "Password": self.password},
+                                         None, False)
 
         if 'Set-Cookie' in response.headers:
             self.cookie = response.headers['Set-Cookie']
