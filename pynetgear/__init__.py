@@ -88,14 +88,14 @@ class Netgear(object):
         if self.login_impl:
             return self.login_impl()
 
-        result = self.login_v2()
-        if result:
-            self.login_impl = self.login_v2
-            return result
-
         result = self.login_v1()
         if result:
             self.login_impl = self.login_v1
+            return result
+
+        result = self.login_v2()
+        if result:
+            self.login_impl = self.login_v2
             return result
 
     def login_v2(self):
