@@ -1,7 +1,7 @@
 pyNetgear
 ==============
 
-[![Build Status](https://travis-ci.com/MatMaul/pynetgear.svg?branch=master)](https://travis-ci.com/MatMaul/pynetgear)
+[![pipeline status](https://gitlab.com/matmaul/pynetgear/badges/master/pipeline.svg)](https://gitlab.com/matmaul/pynetgear/pipelines)
 
 pyNetgear provides an easy to use Python API to control your Netgear router. It uses the SOAP-api on modern Netgear routers to communicate. It is built by reverse engineering the requests made by the [NETGEAR Genie app](https://play.google.com/store/apps/details?id=com.dragonflow).
 
