@@ -379,7 +379,8 @@ class Netgear(object):
 
                 _LOGGER.warning("Unauthorized response, let's login and retry...")
                 if self.login():
-                    headers = self._get_headers(service, method, need_auth) #reset headers with new cookie
+                    # reset headers with new cookie first
+                    headers = self._get_headers(service, method, need_auth)
                     response = requests.post(self.soap_url, headers=headers,
                                              data=message, timeout=30, verify=False)
 
