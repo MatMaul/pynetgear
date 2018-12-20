@@ -84,11 +84,11 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        v2_result = self.login_v2()
-        if v2_result:
-            return v2_result
+        v1_result = self.login_v1()
+        if v1_result:
+            return v1_result
         else:
-            return self.login_v1()
+            return self.login_v2()
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
