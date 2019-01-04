@@ -157,7 +157,7 @@ class Netgear(object):
         if decoded == "0":
             _LOGGER.info("Got nothing useful")
             return devices
-        
+
         entries = decoded.split("@")
 
         # First element is the total device count
