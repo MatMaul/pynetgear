@@ -3,7 +3,6 @@ import sys
 import os
 
 from argparse import ArgumentParser
-from collections.abc import Iterable
 from pynetgear import Netgear, BLOCK, ALLOW
 
 
@@ -19,17 +18,16 @@ def make_formatter(format_name):
 
 
         def jsonify(data):
-            if isinstance(data, Iterable):
-                if isinstance(data, dict):
-                    print(jsondumps(data))
-                else:
-                    print(jsondumps([device._asdict() for device in data]))
+            if isinstance(data, dict):
+                print(jsondumps(data))
+            elif isinstance(data, list):
+                print(jsondumps([device._asdict() for device in data]))
             else:
                 print(dumps({'result': data}))
         return jsonify
     else:
         def printer(data):
-            if isinstance(data, Iterable):
+            if isinstance(data, dict):
                 print(data)
             else:
                 for row in data:
