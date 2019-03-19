@@ -11,11 +11,12 @@ def make_formatter(format_name):
 
     if "json" in format_name:
         from json import dumps
+        import datetime
+        def jsonhandler(obj): obj.isoformat() if isinstance(obj, (datetime.datetime, datetime.date)) else obj
         if format_name == "prettyjson":
-            jsondumps = lambda data: dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+            jsondumps = lambda data: dumps(data, default=jsonhandler, indent=2, separators=(',', ': '))
         else:
-            jsondumps = dumps
-
+            jsondumps = lambda data: dumps(data, default=jsonhandler)
 
         def jsonify(data):
             if isinstance(data, dict):
