@@ -44,7 +44,7 @@ BLOCK = "Block"
 ALLOW = "Allow"
 
 Device = namedtuple(
-    "Device", ["signal", "ip", "name", "mac", "type", "link_rate",
+    "Device", ["name", "ip", "mac", "type", "signal", "link_rate",
                "allow_or_block", "device_type", "device_model",
                "ssid", "conn_ap_mac"])
 
@@ -191,8 +191,8 @@ class Netgear(object):
 
             ipv4, name, mac = info[1:4]
 
-            devices.append(Device(signal, ipv4, name, mac,
-                                  link_type, link_rate, allow_or_block,
+            devices.append(Device(name, ipv4, mac,
+                                  link_type, signal, link_rate, allow_or_block,
                                   None, None, None, None))
 
         return devices
@@ -232,7 +232,7 @@ class Netgear(object):
             device_model = _xml_get(d, 'DeviceModel')
             ssid = _xml_get(d, 'SSID')
             conn_ap_mac = _xml_get(d, 'ConnAPMAC')
-            devices.append(Device(signal, ip, name, mac, link_type, link_rate,
+            devices.append(Device(name, ip, mac, link_type, signal, link_rate,
                                   allow_or_block, device_type, device_model,
                                   ssid, conn_ap_mac))
 
