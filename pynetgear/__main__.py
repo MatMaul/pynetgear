@@ -10,15 +10,20 @@ from pynetgear import Netgear, BLOCK, ALLOW
 def make_formatter(format_name):
     """Returns a callable that outputs the data. Defaults to print."""
 
-    if format_name == "json":
+    if "json" in format_name:
         from json import dumps
+        if format_name == "prettyjson":
+            jsondumps = lambda data: dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+        else:
+            jsondumps = dumps
+
 
         def jsonify(data):
             if isinstance(data, Iterable):
                 if isinstance(data, dict):
-                    print(dumps(data))
+                    print(jsondumps(data))
                 else:
-                    print(dumps([device._asdict() for device in data]))
+                    print(jsondumps([device._asdict() for device in data]))
             else:
                 print(dumps({'result': data}))
         return jsonify
@@ -37,7 +42,7 @@ def argparser():
 
     parser = ArgumentParser(prog='pynetgear')
 
-    parser.add_argument("--format", choices=['json', 'py'], default='py')
+    parser.add_argument("--format", choices=['json', 'prettyjson', 'py'], default='prettyjson')
 
     router_args = parser.add_argument_group("router connection config")
     router_args.add_argument("--host", help="Hostname for the router")
