@@ -29,7 +29,7 @@ def make_formatter(format_name):
             else:
                 for row in data:
                     print(row)
-        printer
+        return printer
 
 
 def argparser():
