@@ -47,6 +47,8 @@ def argparser():
     router_args.add_argument("--host", help="Hostname for the router")
     router_args.add_argument("--user", help="Account for login")
     router_args.add_argument("--port", help="Port exposed on the router")
+    router_args.add_argument("--login-v2", help="Force the use of the cookie-based authentication",
+                             dest="force_login_v2", default=False, action="store_true")
     router_args.add_argument(
             "--password",
             help="Not required with a wired connection." +
@@ -115,7 +117,7 @@ def main():
     args = argparser().parse_args(sys.argv[1:])
     password = os.environ.get('PYNETGEAR_PASSWORD') or args.password
 
-    netgear = Netgear(password, args.host, args.user, args.port, args.ssl, args.url)
+    netgear = Netgear(password, args.host, args.user, args.port, args.ssl, args.url, args.force_login_v2)
 
     results = run_subcommand(netgear, args)
     formatter = make_formatter(args.format)

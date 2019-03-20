@@ -53,7 +53,7 @@ class Netgear(object):
     """Represents a session to a Netgear Router."""
 
     def __init__(self, password=None, host=None, user=None, port=None,
-                 ssl=False, url=None):
+                 ssl=False, url=None, force_login_v2=False):
         """Initialize a Netgear session."""
         if not url and not host and not port:
             url = autodetect_url()
@@ -75,6 +75,7 @@ class Netgear(object):
         self.username = user
         self.password = password
         self.port = port
+        self.force_login_v2 = force_login_v2
         self.cookie = None
         self.config_started = False
 
@@ -84,11 +85,12 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        v1_result = self.login_v1()
-        if v1_result:
-            return v1_result
-        else:
-            return self.login_v2()
+        if not self.force_login_v2:
+            v1_result = self.login_v1()
+            if v1_result:
+                return v1_result
+
+        return self.login_v2()
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
