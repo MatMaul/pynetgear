@@ -132,27 +132,30 @@ def run_subcommand(netgear, args):
         theFunction = COMMANDS[subcommand][0]
         test = False
         verbose = False
+        enable = False
         if hasattr(args, 'test'):
             test = args.test
         if hasattr(args, 'verbose'):
             verbose = args.verbose
-        # print(theFunction)
-        # print(args)
+        if hasattr(args, 'enable'):
+            enable = args.enable
 
         if subcommand in ("block_device", "allow_device"):
             response = getattr(netgear, 'set_block_device_by_mac')(
                 args.mac_addr, BLOCK if subcommand == "block_device" else ALLOW
                 )
 
-        if subcommand == "attached_devices":
-            if verbose:
-                response = getattr(netgear, 'get_attached_devices_2')()
-            response = getattr(netgear, 'get_attached_devices')()
-
-        # Not every function has a test
-        if test:
+        # MOST functions have a test argument
+        # Handle verbose cl arg
+        if verbose:
+            response = getattr(netgear, 'get_attached_devices_2')(test)
+        # If enable = y|n
+        if enable:
+            response = getattr(netgear, theFunction)(test, enable)
+        # if command with test, and test=true
+        elif test:
             response = getattr(netgear, theFunction)(test)
-
+        # fallback
         else:
             response = getattr(netgear, theFunction)()
 

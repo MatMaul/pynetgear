@@ -26,8 +26,8 @@ COMMANDS = {
     'enable_block_device': [
         'set_block_device_enable', 'Enable Access Control', {
             'enable': [
-                '-e', '--enable',
-                'yn', False, False],
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -45,8 +45,8 @@ COMMANDS = {
         'enable_traffic_meter', 'Enable/Disable Traffic Meter',
         {
             'enable': [
-                '-e', '--enable', 'yn',
-                False, False],
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -80,7 +80,9 @@ COMMANDS = {
     'enable_parental_control': [
         'enable_parental_control', 'Enable/Disable Parental Control',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -126,11 +128,21 @@ COMMANDS = {
     ],
     'attached_devices': [
         'attached_devices', 'Get Attached Devices', {
-            'verbose': ['-v', '--verbose', False, 'store_true', False],
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            'verbose': [
+                '-v', '--verbose', False,
+                'store_true', 'This switch will enable, without will disable'],
         }
     ],
     'attached_devices2': [
-        'attached_devices2', 'Get Attached Devices 2'],
+        'attached_devices2', 'Get Attached Devices 2', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+        }
+    ],
     # ---------------------
     # SERVICE_ADVANCED_QOS
     # ---------------------
@@ -159,14 +171,22 @@ COMMANDS = {
     'emable_qos': [
         'set_qos_enable_status', 'Enable/Disable QOS',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
         }
     ],
     'bw_control': [
-        'get_bandwidth_control_options', 'Get Bandwidth Control Options'],
+        'get_bandwidth_control_options', 'Get Bandwidth Control Options',
+        {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+        }
+    ],
     # ---------------------
     # SERVICE_WLAN_CONFIGURATION
     # ---------------------
@@ -174,7 +194,9 @@ COMMANDS = {
     'guest_access_enable': [
         'guest_access_enable', 'Enable/Disable Guest 2.4G Wifi',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -191,7 +213,9 @@ COMMANDS = {
     'guest_access_enable2': [
         'guest_access_enable2', 'Enable/Disable Guest 2.4G Wifi',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', 'This switch will enable, without will disable'],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -202,7 +226,9 @@ COMMANDS = {
     'guest_access_enable_5g': [
         'guest_access_enable_5g', 'Enable/Disable Guest 5G Wifi',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', False],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -219,7 +245,9 @@ COMMANDS = {
     'guest_access_enable_5g1': [
         'guest_access_enable_5g1', 'Enable/Disable Guest 5G Wifi2',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', False],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -232,7 +260,9 @@ COMMANDS = {
     'guest_access_enable_5g2': [
         'guest_access_enable_5g2', 'Enable/Disable Guest 5G Wifi3',
         {
-            'enable': ['-e', '--enable', 'yn', False, False],
+            'enable': [
+                '-e', '--enable', False,
+                'store_true', False],
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],

@@ -242,16 +242,16 @@ class Netgear():
     # def logout(self):
 
     # Need to fix in hass switches (no value)
-    def reboot(self, test=False):
+    def reboot(self, test=False, value='0'):
         """Reboot Router."""
         theLog = {}
         theLog[0] = "Rebooting Router"
         theLog[1] = "Could not successfully reboot router"
-        # value = h.value_to_zero_or_one(value)
+        value = h.value_to_zero_or_one(value)
         theRequest = {
             "service": c.SERVICE_DEVICE_CONFIG,
             "method": c.REBOOT,
-            "params": {"NewRebootEnable": 1},
+            "params": {"NewRebootEnable": value},
             "body": "",
             "need_auth": True
         }
@@ -326,7 +326,7 @@ class Netgear():
 
         return theInfo
 
-    def set_block_device_enable(self, value, test=False):
+    def set_block_device_enable(self, test=False, value='0'):
         """Set SetBlockDeviceEnable."""
         theLog = {}
         theLog[0] = "Setting Block Device Enabled"
@@ -448,7 +448,7 @@ class Netgear():
 
         return {t: h.parse_text(value) for t, value in theInfo.items()}
 
-    def enable_traffic_meter(self, value, test=False):
+    def enable_traffic_meter(self, test=False, value='0'):
         """Set EnableTrafficMeter."""
         theLog = {}
         theLog[0] = "Enabling Traffic Meter"
@@ -500,7 +500,7 @@ class Netgear():
 
         return theInfo
 
-    def enable_parental_control(self, value, test=False):
+    def enable_parental_control(self, test=False, value='0'):
         """Set EnableParentalControl."""
         theLog = {}
         theLog[0] = "Enabling Parental Control"
@@ -594,7 +594,7 @@ class Netgear():
 
         return theInfo
 
-    def get_attached_devices(self):  # noqa
+    def get_attached_devices(self, test=False):  # noqa
         """
         Return list of connected devices to the router.
 
@@ -669,7 +669,7 @@ class Netgear():
 
         return devices
 
-    def get_attached_devices_2(self):  # noqa
+    def get_attached_devices_2(self, test=False):  # noqa
         """
         Return list of connected devices to the router with details.
 
@@ -765,7 +765,7 @@ class Netgear():
 
         return theInfo
 
-    def set_qos_enable_status(self, value, test=False):
+    def set_qos_enable_status(self, test=False, value='0'):
         """Set SetQoSEnableStatus."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -910,7 +910,7 @@ class Netgear():
 
         return theInfo
 
-    def set_guest_access_enabled(self, value, test=False):
+    def set_guest_access_enabled(self, test=False, value='0'):
         """Set SetGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -928,7 +928,7 @@ class Netgear():
 
         return theResponse
 
-    def set_guest_access_enabled_2(self, value, test=False):
+    def set_guest_access_enabled_2(self, test=False, value='0'):
         """Set SetGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -946,7 +946,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled(self, value, test=False):
+    def set_5g_guest_access_enabled(self, test=False, value='0'):
         """Set Set5GGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -964,7 +964,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled_2(self, value, test=False):
+    def set_5g_guest_access_enabled_2(self, test=False, value='0'):
         """Set Set5GGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -982,7 +982,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g1_guest_access_enabled_2(self, value, test=False):
+    def set_5g1_guest_access_enabled_2(self, test=False, value='0'):
         """Set Set5G1GuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
