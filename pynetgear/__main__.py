@@ -17,9 +17,9 @@ def make_formatter(format_name):  # noqa  # pylama C901
 
         def jsonhandler(obj):
             if isinstance(obj, (datetime.datetime, datetime.date)):
-                obj.isoformat()
-            else:
-                obj
+                return obj.isoformat()
+
+            return obj
 
         if format_name == "prettyjson":
             def jsondumps(data):
@@ -125,10 +125,9 @@ def argparser():  # pylint: disable=too-many-locals
 def run_subcommand(netgear, args):
     """Run the subcommand configured in args on the netgear session."""
     subcommand = args.subcommand
+    response = None
 
-    print(subcommand)
     if subcommand in COMMANDS:
-        response = None
         theFunction = COMMANDS[subcommand][0]
         test = False
         verbose = False
@@ -159,9 +158,10 @@ def run_subcommand(netgear, args):
         else:
             response = getattr(netgear, theFunction)()
 
-        return response
+    else:
+        print("Unknown subcommand")
 
-    print("Unknown subcommand")
+    return response
 
 
 def main():
