@@ -133,14 +133,14 @@ class Netgear():
 
             return success, response
 
-        except requests.exceptions.SSLError as e:
+        except requests.exceptions.SSLError:
             _LOGGER.exception("SSL Error. Try --no-ssl")
 
         except requests.exceptions.HTTPError as e:
-            _LOGGER.exception('HTTP error: {}'.format(e))
+            _LOGGER.exception('HTTP error: %s', e)
 
         except requests.exceptions.RequestException as e:
-            _LOGGER.exception('Connection error: {}'.format(e))
+            _LOGGER.exception('Connection error: %s', e)
             # _LOGGER.exception("Error talking to API")
 
             # Maybe one day we will distinguish between
