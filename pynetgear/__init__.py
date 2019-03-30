@@ -247,7 +247,7 @@ class Netgear():
         theLog = {}
         theLog[0] = "Rebooting Router"
         theLog[1] = "Could not successfully reboot router"
-        value = h.value_to_zero_or_one(value)
+        # value = h.value_to_zero_or_one(value)
         theRequest = {
             "service": c.SERVICE_DEVICE_CONFIG,
             "method": c.REBOOT,
