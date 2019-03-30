@@ -241,7 +241,6 @@ class Netgear():
 
     # def logout(self):
 
-    # Need to fix in hass switches (no value)
     def reboot(self, test=False, value='0'):
         """Reboot Router."""
         theLog = {}
@@ -346,7 +345,7 @@ class Netgear():
 
     # def enable_block_device_for_all(self):
 
-    def set_block_device_by_mac(self, mac_addr,
+    def set_block_device_by_mac(self, test=False, mac_addr=None,
                                 device_status=c.BLOCK):
         """
         Allow or Block a device via its Mac Address.
@@ -356,34 +355,24 @@ class Netgear():
         (allow device to access the network) or Block (block the device
         from accessing the network).
         """
-        _LOGGER.info("Allow block device")
-        if self.config_started:
-            _LOGGER.error(
-                "Inconsistant configuration state, "
-                "configuration already started"
-                )
-            return False
+        theLog = {}
+        theLog[0] = "Allow block device"
+        theLog[1] = "Could not successfully call allow/block device"
+        theRequest = {
+            "service": c.SERVICE_DEVICE_CONFIG,
+            "method": c.SET_BLOCK_DEVICE_BY_MAC,
+            "params": {
+                "NewAllowOrBlock": device_status,
+                "NewMACAddress": mac_addr},
+            "body": "",
+            "need_auth": True
+        }
 
-        if not self.config_start():
-            _LOGGER.error("Could not start configuration")
-            return False
+        theResponse = False
+        if mac_addr:
+            theResponse = self._set(theLog, theRequest, test)
 
-        success, _ = self._make_request(
-            c.SERVICE_DEVICE_CONFIG, c.SET_BLOCK_DEVICE_BY_MAC,
-            {"NewAllowOrBlock": device_status, "NewMACAddress": mac_addr})
-
-        if not success:
-            _LOGGER.error("Could not successfully call allow/block device")
-            return False
-
-        if not self.config_finish():
-            _LOGGER.error(
-                "Inconsistant configuration state, "
-                "configuration already finished"
-                )
-            return False
-
-        return True
+        return theResponse
 
     def get_traffic_meter_enabled(self, test=False):
         """Parse GetTrafficMeterEnabled and return dict."""

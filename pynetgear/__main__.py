@@ -48,7 +48,7 @@ def make_formatter(format_name):  # noqa  # pylama C901
         return printer
 
 
-def argparser():  # pylint: disable=too-many-locals
+def argparser():
     """Construct the ArgumentParser for the CLI."""
     parser = ArgumentParser(prog='pynetgear')
 
@@ -66,7 +66,7 @@ def argparser():  # pylint: disable=too-many-locals
         dest="force_login_v2", default=False, action="store_true"
         )
     router_args.add_argument(
-            "--password",
+            "-p", "--password",
             help="Not required with a wired connection." +
                  "Optionally, set the PYNETGEAR_PASSWORD environment variable")
     router_args.add_argument(
@@ -78,51 +78,37 @@ def argparser():  # pylint: disable=too-many-locals
 
     subparsers = parser.add_subparsers(
             description="Runs subcommand against the specified router",
-            dest="subcommand")
+            dest="subcommand", metavar="")
 
-    # Block
-    block_parser = subparsers.add_parser(
-            "block_device",
-            help="Blocks a device from connecting by mac address")
-    block_parser.add_argument("--mac-addr")
-
-    # Allow
-    allow_parser = subparsers.add_parser(
-            "allow_device",
-            help="Allows a device with the mac address to connect")
-    allow_parser.add_argument("--mac-addr")
-
+    # loop through COMMANDS and create the cli args
     for command, value in COMMANDS.items():
-        # functionStr = value[0]
-        helpStr = value[1]
 
         if len(value) == 3:
-            strAddParser = subparsers.add_parser(command, help=helpStr)
+            strAddParser = subparsers.add_parser(command, help=value[1])
 
-            for _, aChoice in value[2].items():
-                theComShort = aChoice[0]
-                theComLong = aChoice[1]
-                theChoice = aChoice[2]
-                theAction = aChoice[3]
-                theHelp = aChoice[4]
+            for _, aArgs in value[2].items():
 
-                if theChoice:
+                if aArgs[2]:
                     strAddParser.add_argument(
-                        theComShort, theComLong,
-                        help=theHelp, choices=theChoice)
+                        aArgs[0], aArgs[1],
+                        help=aArgs[4], choices=aArgs[2])
 
-                if theAction == 'store_true':
+                elif aArgs[3] == 'store_true':
                     strAddParser.add_argument(
-                        theComShort, theComLong, help=theHelp,
+                        aArgs[0], aArgs[1], help=aArgs[4],
                         action='store_true', default=False)
 
+                else:
+                    strAddParser.add_argument(
+                        aArgs[0], aArgs[1], help=aArgs[4])
+
         else:
-            subparsers.add_parser(command, help=helpStr)
+            subparsers.add_parser(command, help=value[1])
 
     return parser
 
 
-def run_subcommand(netgear, args):
+def run_subcommand(netgear, args):  # noqa  # pylama C901
     """Run the subcommand configured in args on the netgear session."""
     subcommand = args.subcommand
     response = None
@@ -132,24 +118,31 @@ def run_subcommand(netgear, args):
         test = False
         verbose = False
         enable = False
+        mac = False
+        action = None
         if hasattr(args, 'test'):
             test = args.test
         if hasattr(args, 'verbose'):
             verbose = args.verbose
         if hasattr(args, 'enable'):
             enable = args.enable
-
-        if subcommand in ("block_device", "allow_device"):
-            response = getattr(netgear, 'set_block_device_by_mac')(
-                args.mac_addr, BLOCK if subcommand == "block_device" else ALLOW
-                )
+        if hasattr(args, 'mac'):
+            mac = args.mac
+        if hasattr(args, 'action'):
+            action = args.action
 
         # MOST functions have a test argument
         # Handle verbose cl arg
         if verbose:
             response = getattr(netgear, 'get_attached_devices_2')(test)
+        # Special case for block device
+        elif subcommand == 'block_device_cli':
+            theAction = BLOCK
+            if action == 'allow':
+                theAction = ALLOW
+            response = getattr(netgear, theFunction)(test, mac, theAction)
         # If enable = y|n
-        if enable:
+        elif enable:
             response = getattr(netgear, theFunction)(test, enable)
         # if command with test, and test=true
         elif test:

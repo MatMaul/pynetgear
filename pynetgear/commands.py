@@ -1,9 +1,9 @@
 # encoding: utf-8
 """Dict of COMMANDS."""
-# arg: [function, help, args:{
+# clArg: [function, help, args:{
 #           shortCommand, LongCommand, choices
 #           store_true, help
-#       }]
+#        }]
 
 COMMANDS = {
     # ---------------------
@@ -22,7 +22,6 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
             }
         ],
-    # value/test
     'enable_block_device': [
         'set_block_device_enable', 'Enable Access Control', {
             'enable': [
@@ -40,7 +39,19 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
         }
     ],
-    # value/test
+    'block_device_cli': [
+        'set_block_device_by_mac', 'Allow/Block Device by MAC', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            'mac': [
+                '-m', '--mac', False,
+                False, 'MAC Address to Allow/Block'],
+            'action': [
+                '-a', '--action', ['allow', 'block'],
+                False, 'Action to take, Allow or Block'],
+        }
+    ],
     'enable_traffic_meter': [
         'enable_traffic_meter', 'Enable/Disable Traffic Meter',
         {
@@ -76,7 +87,6 @@ COMMANDS = {
     # ---------------------
     # SERVICE_PARENTAL_CONTROL
     # ---------------------
-    # value/test
     'enable_parental_control': [
         'enable_parental_control', 'Enable/Disable Parental Control',
         {
@@ -167,7 +177,6 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
         }
     ],
-    # value/test
     'emable_qos': [
         'set_qos_enable_status', 'Enable/Disable QOS',
         {
@@ -190,7 +199,6 @@ COMMANDS = {
     # ---------------------
     # SERVICE_WLAN_CONFIGURATION
     # ---------------------
-    # value/test
     'guest_access_enable': [
         'guest_access_enable', 'Enable/Disable Guest 2.4G Wifi',
         {
@@ -209,7 +217,6 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
         }
     ],
-    # value/test
     'guest_access_enable2': [
         'guest_access_enable2', 'Enable/Disable Guest 2.4G Wifi',
         {
@@ -222,7 +229,6 @@ COMMANDS = {
         }
     ],
     # 'guest_access2': ['guest_access2', 'get_guest_access_enabled2'],
-    # value/test
     'guest_access_enable_5g': [
         'guest_access_enable_5g', 'Enable/Disable Guest 5G Wifi',
         {
@@ -241,7 +247,6 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
         }
     ],
-    # value/test
     'guest_access_enable_5g1': [
         'guest_access_enable_5g1', 'Enable/Disable Guest 5G Wifi2',
         {
@@ -256,7 +261,6 @@ COMMANDS = {
     # 'guest_access_5g1':[
     #    'guest_access_5g1', 'get_5g1_guest_access_enabled_2'],
 
-    # value/test
     'guest_access_enable_5g2': [
         'guest_access_enable_5g2', 'Enable/Disable Guest 5G Wifi3',
         {
