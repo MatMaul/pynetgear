@@ -3,8 +3,8 @@ import sys
 import os
 
 from argparse import ArgumentParser
-from pynetgear import Netgear, BLOCK, ALLOW
-
+from . import Netgear  # pylint: disable=relative-beyond-top-level
+from .const import ALLOW, BLOCK  # pylint: disable=relative-beyond-top-level
 
 def make_formatter(format_name):
     """Returns a callable that outputs the data. Defaults to print."""
