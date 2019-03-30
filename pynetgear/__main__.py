@@ -1,218 +1,16 @@
+# encoding: utf-8
 """Run PyNetgear from the command-line."""
 import sys
 import os
 
 from argparse import ArgumentParser
-from . import Netgear
-from .const import ALLOW, BLOCK
-
-# arg: [function, help, args:{arg1: choice, arg2: choice}]
-COMMANDS = {
-    # ---------------------
-    # SERVICE_DEVICE_CONFIG
-    # ---------------------
-    'login': ['login', 'Attempts to login to router'],
-    'reboot': ['reboot', 'Reboot Router',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'check_fw': ['check_new_firmware', 'Check for new firmware',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # value/test
-    'enable_block_device': ['set_block_device_enable', 'Enable Access Control',
-        { 
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'block_device_status': ['get_block_device_enable_status', 'Get Access Control Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # value/test
-    'enable_traffic_meter': ['enable_traffic_meter', 'Enable/Disable Traffic Meter',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'traffic_meter': ['get_traffic_meter_statistics', 'Get Traffic Meter Statistics',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'traffic_meter_enabled': ['get_traffic_meter_enabled', 'Get Traffic Meter Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'traffic_meter_options': ['get_traffic_meter_options', 'Get Traffic Meter Options',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # ---------------------
-    # SERVICE_PARENTAL_CONTROL
-    # ---------------------
-    # value/test
-    'enable_parental_control': ['enable_parental_control', 'Enable/Disable Parental Control',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'parental_control_status': ['get_parental_control_enable_status', 'Get Parental Control Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'mac_address': ['get_all_mac_addresses', 'Get all MAC Addresses',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'dns_masq': ['get_dns_masq_device_id', 'Get DNS Masq Device ID',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # ---------------------
-    # SERVICE_DEVICE_INFO
-    # ---------------------
-    'info': ['get_info', 'Get Info',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'support_feature': ['get_support_feature_list_XML', 'Get Supported Features',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'attached_devices': ['attached_devices', 'Get Attached Devices',
-        { 
-            'verbose': ['-v', '--verbose', False, 'store_true', False],
-        }
-    ],
-    'attached_devices2': ['attached_devices2', 'Get Attached Devices 2'],
-    # ---------------------
-    # SERVICE_ADVANCED_QOS
-    # ---------------------
-    'speed_test_start': ['set_speed_test_start', 'Start Speed Test',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'speed_test_result': ['get_speed_test_result', 'Get Speed Test Results',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'qos_enabled': ['get_qos_enable_status', 'Get QOS Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # value/test
-    'emable_qos': ['set_qos_enable_status', 'Enable/Disable QOS',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'bw_control': ['get_bandwidth_control_options', 'Get Bandwidth Control Options'],
-    # ---------------------
-    # SERVICE_WLAN_CONFIGURATION
-    # ---------------------
-    # value/test
-    'guest_access_enable': ['guest_access_enable', 'Enable/Disable Guest 2.4G Wifi',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'guest_access': ['guest_access', 'Get 2G Guest Wifi Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # value/test
-    'guest_access_enable2': ['guest_access_enable2', 'Enable/Disable Guest 2.4G Wifi',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # 'guest_access2': ['guest_access2', 'get_guest_access_enabled2'],
-    # value/test
-    'guest_access_enable_5g': ['guest_access_enable_5g', 'Enable/Disable Guest 5G Wifi',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'guest_access_5g': ['guest_access_5g', 'Get 5G Guest Wifi Status',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # value/test
-    'guest_access_enable_5g1': ['guest_access_enable_5g1', 'Enable/Disable Guest 5G Wifi2',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # 'guest_access_5g1':[ 'guest_access_5g1', 'get_5g1_guest_access_enabled_2'],
-    # value/test
-    'guest_access_enable_5g2': ['guest_access_enable_5g2', 'Enable/Disable Guest 5G Wifi3',
-        {
-            'enable': ['-e', '--enable', 'yn', False, False],
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    # 'guest_access_5g2': ['guest_access_5g2', 'get_5g_guest_access_enabled_2'],
-    'wpa_key': ['wpa_key', 'Get 2G WPA Key',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'wpa_key_5g': ['wpa_key_5g', 'Get 5G WPA Key',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'get_2g_info': ['get_2g_info', 'Get 2G Info',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'get_5g_info': ['get_5g_info', 'Get 5G Info',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'guest_access_net': ['guest_access_net', 'Get 2G Guest Wifi Info',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-    'guest_access_net_5g': ['guest_access_net_5g', 'Get 5G Guest Wifi Info',
-        { 
-            'test': ['-t', '--test', False, 'store_true', 'Output SOAP Response'],
-        }
-    ],
-}
+from . import Netgear  # pylint: disable=relative-beyond-top-level
+from .const import ALLOW, BLOCK  # pylint: disable=relative-beyond-top-level
+from .commands import COMMANDS  # pylint: disable=relative-beyond-top-level
 
 
-def make_formatter(format_name):  # noqa
-    """Returns a callable that outputs the data. Defaults to print."""
-
+def make_formatter(format_name):  # noqa  # pylama C901
+    """Return a callable that outputs the data. Defaults to print."""
     if "json" in format_name:
         from json import dumps
         import datetime
@@ -250,7 +48,7 @@ def make_formatter(format_name):  # noqa
         return printer
 
 
-def argparser():
+def argparser():  # pylint: disable=too-many-locals
     """Construct the ArgumentParser for the CLI."""
     parser = ArgumentParser(prog='pynetgear')
 
@@ -295,13 +93,13 @@ def argparser():
     allow_parser.add_argument("--mac-addr")
 
     for command, value in COMMANDS.items():
-        functionStr = value[0]
+        # functionStr = value[0]
         helpStr = value[1]
 
         if len(value) == 3:
             strAddParser = subparsers.add_parser(command, help=helpStr)
 
-            for aCommand, aChoice in value[2].items():
+            for _, aChoice in value[2].items():
                 theComShort = aChoice[0]
                 theComLong = aChoice[1]
                 theChoice = aChoice[2]
@@ -309,10 +107,14 @@ def argparser():
                 theHelp = aChoice[4]
 
                 if theChoice:
-                    strAddParser.add_argument(theComShort, theComLong, help=theHelp, choices=theChoice)
+                    strAddParser.add_argument(
+                        theComShort, theComLong,
+                        help=theHelp, choices=theChoice)
 
                 if theAction == 'store_true':
-                    strAddParser.add_argument(theComShort, theComLong, help=theHelp, action='store_true', default=False)
+                    strAddParser.add_argument(
+                        theComShort, theComLong, help=theHelp,
+                        action='store_true', default=False)
 
         else:
             subparsers.add_parser(command, help=helpStr)
@@ -334,18 +136,18 @@ def run_subcommand(netgear, args):
             test = args.test
         if hasattr(args, 'verbose'):
             verbose = args.verbose
-        #print(theFunction)
-        #print(args)
+        # print(theFunction)
+        # print(args)
 
         if subcommand in ("block_device", "allow_device"):
-            response = netgear.set_block_device_by_mac(
+            response = getattr(netgear, 'set_block_device_by_mac')(
                 args.mac_addr, BLOCK if subcommand == "block_device" else ALLOW
                 )
-        
+
         if subcommand == "attached_devices":
-            if args.verbose:
-                response = getattr(netgear, get_attached_devices_2)()
-            response = getattr(netgear, get_attached_devices)()
+            if verbose:
+                response = getattr(netgear, 'get_attached_devices_2')()
+            response = getattr(netgear, 'get_attached_devices')()
 
         # Not every function has a test
         if test:
@@ -356,8 +158,8 @@ def run_subcommand(netgear, args):
 
         return response
 
-
     print("Unknown subcommand")
+
 
 def main():
     """Scan for devices and print results."""
