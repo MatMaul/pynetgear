@@ -133,12 +133,20 @@ class Netgear():
 
             return success, response
 
-        except requests.exceptions.RequestException:
-            _LOGGER.exception("Error talking to API")
+        except requests.exceptions.SSLError:
+            _LOGGER.exception("SSL Error. Try --no-ssl")
+
+        except requests.exceptions.HTTPError as e:
+            _LOGGER.exception('HTTP error: %s', e)
+
+        except requests.exceptions.RequestException as e:
+            _LOGGER.exception('Connection error: %s', e)
+            # _LOGGER.exception("Error talking to API")
 
             # Maybe one day we will distinguish between
             # different errors..
-            return False, None
+
+        return False, None
 
     def _get(self, theLog, theService, theEndpoint,  # noqa
              parseNode, toParse, test=False):
@@ -233,7 +241,7 @@ class Netgear():
 
     # def logout(self):
 
-    def reboot(self, value, test=False):
+    def reboot(self, test=False, value='0'):
         """Reboot Router."""
         theLog = {}
         theLog[0] = "Rebooting Router"
@@ -317,7 +325,7 @@ class Netgear():
 
         return theInfo
 
-    def set_block_device_enable(self, value, test=False):
+    def set_block_device_enable(self, test=False, value='0'):
         """Set SetBlockDeviceEnable."""
         theLog = {}
         theLog[0] = "Setting Block Device Enabled"
@@ -337,11 +345,8 @@ class Netgear():
 
     # def enable_block_device_for_all(self):
 
-    # Will change allow_block_device to set_block_device_by_mac
-    # def set_block_device_by_mac(self, mac_addr,
-    #                            device_status=c.BLOCK):
-    def allow_block_device(self, mac_addr,
-                           device_status=c.BLOCK):
+    def set_block_device_by_mac(self, test=False, mac_addr=None,
+                                device_status=c.BLOCK):
         """
         Allow or Block a device via its Mac Address.
 
@@ -350,34 +355,24 @@ class Netgear():
         (allow device to access the network) or Block (block the device
         from accessing the network).
         """
-        _LOGGER.info("Allow block device")
-        if self.config_started:
-            _LOGGER.error(
-                "Inconsistant configuration state, "
-                "configuration already started"
-                )
-            return False
+        theLog = {}
+        theLog[0] = "Allow block device"
+        theLog[1] = "Could not successfully call allow/block device"
+        theRequest = {
+            "service": c.SERVICE_DEVICE_CONFIG,
+            "method": c.SET_BLOCK_DEVICE_BY_MAC,
+            "params": {
+                "NewAllowOrBlock": device_status,
+                "NewMACAddress": mac_addr},
+            "body": "",
+            "need_auth": True
+        }
 
-        if not self.config_start():
-            _LOGGER.error("Could not start configuration")
-            return False
+        theResponse = False
+        if mac_addr:
+            theResponse = self._set(theLog, theRequest, test)
 
-        success, _ = self._make_request(
-            c.SERVICE_DEVICE_CONFIG, c.SET_BLOCK_DEVICE_BY_MAC,
-            {"NewAllowOrBlock": device_status, "NewMACAddress": mac_addr})
-
-        if not success:
-            _LOGGER.error("Could not successfully call allow/block device")
-            return False
-
-        if not self.config_finish():
-            _LOGGER.error(
-                "Inconsistant configuration state, "
-                "configuration already finished"
-                )
-            return False
-
-        return True
+        return theResponse
 
     def get_traffic_meter_enabled(self, test=False):
         """Parse GetTrafficMeterEnabled and return dict."""
@@ -413,31 +408,36 @@ class Netgear():
 
         return theInfo
 
-    # Will change get_traffic_meter to get_traffic_meter_statistics
-    # Will format to boilerplate
-    # def get_traffic_meter_statistics(self, test=False):
-    def get_traffic_meter(self):
-        """
-        Return dict of traffic meter stats.
+    def get_traffic_meter_statistics(self, test=False):
+        """Parse GetTrafficMeterStatistics and return dict."""
+        theLog = "Get Traffic Meter Statistics"
+        parseNode = f".//{c.GET_TRAFFIC_METER_STATISTICS}Response"
+        toParse = [
+            'NewTodayConnectionTime',
+            'NewTodayUpload',
+            'NewTodayDownload',
+            'NewYesterdayConnectionTime',
+            'NewYesterdayUpload',
+            'NewYesterdayDownload',
+            'NewWeekConnectionTime',
+            'NewWeekUpload',
+            'NewWeekDownload',
+            'NewMonthConnectionTime',
+            'NewMonthUpload',
+            'NewMonthDownload',
+            'NewLastMonthConnectionTime',
+            'NewLastMonthUpload',
+            'NewLastMonthDownload'
+        ]
 
-        Returns None if error occurred.
-        """
-        _LOGGER.info("Get traffic meter")
+        theInfo = self._get(
+            theLog, c.SERVICE_DEVICE_CONFIG,
+            c.GET_TRAFFIC_METER_STATISTICS, parseNode, toParse, test
+            )
 
-        success, response = self._make_request(c.SERVICE_DEVICE_CONFIG,
-                                               c.GET_TRAFFIC_METER_STATISTICS)
-        if not success:
-            return None
+        return {t: h.parse_text(value) for t, value in theInfo.items()}
 
-        success, node = h.find_node(
-            response.text,
-            f".//{c.GET_TRAFFIC_METER_STATISTICS}Response")
-        if not success:
-            return None
-
-        return {t.tag: h.parse_text(t.text) for t in node}
-
-    def enable_traffic_meter(self, value, test=False):
+    def enable_traffic_meter(self, test=False, value='0'):
         """Set EnableTrafficMeter."""
         theLog = {}
         theLog[0] = "Enabling Traffic Meter"
@@ -489,7 +489,7 @@ class Netgear():
 
         return theInfo
 
-    def enable_parental_control(self, value, test=False):
+    def enable_parental_control(self, test=False, value='0'):
         """Set EnableParentalControl."""
         theLog = {}
         theLog[0] = "Enabling Parental Control"
@@ -583,7 +583,7 @@ class Netgear():
 
         return theInfo
 
-    def get_attached_devices(self):  # noqa
+    def get_attached_devices(self, test=False):  # noqa
         """
         Return list of connected devices to the router.
 
@@ -658,7 +658,7 @@ class Netgear():
 
         return devices
 
-    def get_attached_devices_2(self):  # noqa
+    def get_attached_devices_2(self, test=False):  # noqa
         """
         Return list of connected devices to the router with details.
 
@@ -754,7 +754,7 @@ class Netgear():
 
         return theInfo
 
-    def set_qos_enable_status(self, value, test=False):
+    def set_qos_enable_status(self, test=False, value='0'):
         """Set SetQoSEnableStatus."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -899,7 +899,7 @@ class Netgear():
 
         return theInfo
 
-    def set_guest_access_enabled(self, value, test=False):
+    def set_guest_access_enabled(self, test=False, value='0'):
         """Set SetGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -917,7 +917,7 @@ class Netgear():
 
         return theResponse
 
-    def set_guest_access_enabled_2(self, value, test=False):
+    def set_guest_access_enabled_2(self, test=False, value='0'):
         """Set SetGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -935,7 +935,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled(self, value, test=False):
+    def set_5g_guest_access_enabled(self, test=False, value='0'):
         """Set Set5GGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -953,7 +953,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled_2(self, value, test=False):
+    def set_5g_guest_access_enabled_2(self, test=False, value='0'):
         """Set Set5GGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -971,7 +971,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g1_guest_access_enabled_2(self, value, test=False):
+    def set_5g1_guest_access_enabled_2(self, test=False, value='0'):
         """Set Set5G1GuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"

@@ -8,7 +8,7 @@ import requests
 import logging
 from datetime import timedelta
 
-from .const import SERVICE_PREFIX  # noqa
+from .const import SERVICE_PREFIX  # pylint: disable=relative-beyond-top-level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,21 +158,16 @@ def parse_text(text):
         return None
 
 
-def str_to_bool(s):
-    """Convert string t/f to bool."""
-    if s == 'True':
-        return True
-    if s == 'False':
-        return False
-
-    raise ValueError("Cannot covert {} to a bool".format(s))
-
-
 def value_to_zero_or_one(s):
     """Convert value to 1 or 0 string."""
-    if s.lower() in ('true', 't', 'yes', 'y', '1'):
-        return '1'
-    if s.lower() in ('false', 'f', 'no', 'n', '0'):
+    if isinstance(s, str):
+        if s.lower() in ('true', 't', 'yes', 'y', '1'):
+            return '1'
+        if s.lower() in ('false', 'f', 'no', 'n', '0'):
+            return '0'
+    if isinstance(s, bool):
+        if s:
+            return '1'
         return '0'
 
     raise ValueError("Cannot covert {} to a 1 or 0".format(s))
