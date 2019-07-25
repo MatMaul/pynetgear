@@ -28,7 +28,8 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
             }
     ],
-    'get_device_config_info': ['get_device_config_info', 'Get Device Config Info', {
+    'get_device_config_info': [
+        'get_device_config_info', 'Get Device Config Info', {
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
@@ -99,7 +100,8 @@ COMMANDS = {
     # ---------------------
     # SERVICE_LAN_CONFIG_SECURITY
     # ---------------------
-    'get_lan_config_info': ['get_lan_config_sec_info', 'Get LAN Config Sec Info', {
+    'get_lan_config_info': [
+        'get_lan_config_sec_info', 'Get LAN Config Sec Info', {
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
