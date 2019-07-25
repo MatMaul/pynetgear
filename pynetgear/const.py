@@ -25,9 +25,12 @@ SESSION_ID = "A7D88AE69687E58D9A00"
 SERVICE_PREFIX = "urn:NETGEAR-ROUTER:service:"
 SERVICE_DEVICE_INFO = "DeviceInfo:1"
 SERVICE_DEVICE_CONFIG = "DeviceConfig:1"
+SERVICE_LAN_CONFIG_SECURITY = "LANConfigSecurity:1"
+SERVICE_WAN_IP_CONNECTION = "WANIPConnection:1"
 SERVICE_PARENTAL_CONTROL = "ParentalControl:1"
 SERVICE_ADVANCED_QOS = "AdvancedQoS:1"
 SERVICE_WLAN_CONFIGURATION = "WLANConfiguration:1"
+SERVICE_USER_OPTIONS_TC = "UserOptionsTC:1"
 
 # ---------------------
 # SERVICE_DEVICE_CONFIG
@@ -37,8 +40,10 @@ LOGIN = 'SOAPLogin'
 REBOOT = 'Reboot'
 CHECK_NEW_FIRMWARE = 'CheckNewFirmware'
 # UPDATE_NEW_FIRMWARE = 'UpdateNewFirmware'
+CHECK_APP_NEW_FIRMWARE = 'CheckAppNewFirmware'  # ***NEW***
 CONFIGURATION_STARTED = 'ConfigurationStarted'
 CONFIGURATION_FINISHED = 'ConfigurationFinished'
+GET_DEVICE_CONFIG_INFO = 'GetInfo'  # ***NEW***
 
 # BLOCK/ALLOW DEVICE
 SET_BLOCK_DEVICE_ENABLE = 'SetBlockDeviceEnable'
@@ -52,6 +57,16 @@ ENABLE_TRAFFIC_METER = 'EnableTrafficMeter'
 GET_TRAFFIC_METER_ENABLED = 'GetTrafficMeterEnabled'
 # SET_TRAFFIC_METER_OPTIONS = 'SetTrafficMeterOptions'
 GET_TRAFFIC_METER_OPTIONS = 'GetTrafficMeterOptions'
+
+# ---------------------
+# SERVICE_LAN_CONFIG_SECURITY
+# ---------------------
+GET_LAN_CONFIG_SEC_INFO = 'GetInfo'	 # ***NEW***
+
+# ---------------------
+# SERVICE_WAN_IP_CONNECTION
+# ---------------------
+GET_WAN_IP_CON_INFO = 'GetInfo'  # ***NEW***
 
 # ---------------------
 # SERVICE_PARENTAL_CONTROL
@@ -72,6 +87,7 @@ GET_SUPPORT_FEATURE_LIST_XML = 'GetSupportFeatureListXML'
 GET_ATTACHED_DEVICES = 'GetAttachDevice'
 GET_ATTACHED_DEVICES_2 = 'GetAttachDevice2'
 # SET_DEVICE_NAME_ICON_BY_MAC = 'SetDeviceNameIconByMAC'
+# SET_DEVICE_NAME = 'SetNetgearDeviceName'	 # ***NEW***
 
 # ---------------------
 # SERVICE_ADVANCED_QOS
@@ -109,6 +125,13 @@ GET_AVAILABLE_CHANNEL = 'GetAvailableChannel'
 GET_GUEST_ACCESS_NETWORK_INFO = 'GetGuestAccessNetworkInfo'
 # SET_5G_GUEST_ACCESS_NETWORK = 'Set5GGuestAccessNetwork'
 GET_5G_GUEST_ACCESS_NETWORK_INFO = 'Get5GGuestAccessNetworkInfo'
+GET_SMART_CONNECT_ENABLED = 'IsSmartConnectEnabled'	 # ***NEW***
+SET_SMART_CONNECT_ENABLED = 'SetSmartConnectEnable'	 # ***NEW***
+
+# ---------------------
+# SERVICE_USER_OPTIONS_TC
+# ---------------------
+SET_USER_OPTION_TC = 'SetUserOptionsTC'	 # ***NEW***
 
 # ---------------------
 # FORMATTING

@@ -21,7 +21,19 @@ COMMANDS = {
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
             }
-        ],
+    ],
+    'check_app_fw': ['check_app_new_firmware', 'Check app for new firmware', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            }
+    ],
+    'get_device_config_info': ['get_device_config_info', 'Get Device Config Info', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            }
+    ],
     'enable_block_device': [
         'set_block_device_enable', 'Enable Access Control', {
             'enable': [
@@ -83,6 +95,24 @@ COMMANDS = {
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
         }
+    ],
+    # ---------------------
+    # SERVICE_LAN_CONFIG_SECURITY
+    # ---------------------
+    'get_lan_config_info': ['get_lan_config_sec_info', 'Get LAN Config Sec Info', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            }
+    ],
+    # ---------------------
+    # SERVICE_WAN_IP_CONNECTION
+    # ---------------------
+    'get_wan_ip_info': ['get_wan_ip_con_info', 'Get WAN IP Info', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            }
     ],
     # ---------------------
     # SERVICE_PARENTAL_CONTROL
@@ -303,18 +333,32 @@ COMMANDS = {
                 'store_true', 'Output SOAP Response'],
         }
     ],
+    'get_channel': [
+        'get_available_channel', 'Get Channel', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+        }
+    ],
     'guest_access_net': [
-        'guest_access_net', 'Get 2G Guest Wifi Info', {
+        'get_guest_access_network_info', 'Get 2G Guest Wifi Info', {
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
         }
     ],
     'guest_access_net_5g': [
-        'guest_access_net_5g', 'Get 5G Guest Wifi Info', {
+        'get_5g_guest_access_network_info', 'Get 5G Guest Wifi Info', {
             'test': [
                 '-t', '--test', False,
                 'store_true', 'Output SOAP Response'],
         }
     ],
+    'get_smart_conn': ['get_smart_connect_enabled', 'Get Smart Conn Status', {
+            'test': [
+                '-t', '--test', False,
+                'store_true', 'Output SOAP Response'],
+            }
+    ],
+
 }

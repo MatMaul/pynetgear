@@ -278,6 +278,27 @@ class Netgear():
 
     # def update_new_firmware(self):
 
+    # **NEW**
+    # Response is GetInfo
+    def check_app_new_firmware(self, test=False):
+        """Parse CheckAppNewFirmware and return dict."""
+        theLog = "Check for new firmware"
+        parseNode = f".//{c.GET_DEVICE_CONFIG_INFO}Response"
+        toParse = [
+            'BlankState',
+            'NewBlockSiteEnable',
+            'NewBlockSiteName',
+            'NewTimeZone',
+            'NewDaylightSaving'
+        ]
+
+        theInfo = self._get(
+            theLog, c.SERVICE_DEVICE_CONFIG,
+            c.CHECK_APP_NEW_FIRMWARE, parseNode, toParse, test
+            )
+
+        return theInfo
+
     def config_start(self):
         """
         Start a configuration session.
@@ -311,6 +332,26 @@ class Netgear():
 
         self.config_started = not success
         return success
+
+    # **NEW**
+    def get_device_config_info(self, test=False):
+        """Parse Device Config GetInfo and return dict."""
+        theLog = "Get DeviceConfig Info"
+        parseNode = f".//{c.GET_DEVICE_CONFIG_INFO}Response"
+        toParse = [
+            'BlankState',
+            'NewBlockSiteEnable',
+            'NewBlockSiteName',
+            'NewTimeZone',
+            'NewDaylightSaving'
+        ]
+
+        theInfo = self._get(
+            theLog, c.SERVICE_DEVICE_CONFIG,
+            c.GET_DEVICE_CONFIG_INFO, parseNode, toParse, test
+            )
+
+        return theInfo
 
     def get_block_device_enable_status(self, test=False):
         """Parse GetBlockDeviceEnableStatus and return dict."""
@@ -456,6 +497,58 @@ class Netgear():
         return theResponse
 
     # def set_traffic_meter_options(self):
+
+    ##########################################################################
+    # SERVICE_LAN_CONFIG_SECURITY
+    ##########################################################################
+    # **NEW**
+    def get_lan_config_sec_info(self, test=False):
+        """Parse LANConfigSecurity Info and return dict."""
+        theLog = "Get LANConfigSecurity Info"
+        parseNode = f".//{c.GET_LAN_CONFIG_SEC_INFO}Response"
+        toParse = [
+            'NewLANSubnet',
+            'NewWANLAN_Subnet_Match',
+            'NewLANMACAddress',
+            'NewLANIP',
+            'NewDHCPEnabled'
+        ]
+
+        theInfo = self._get(
+            theLog, c.SERVICE_LAN_CONFIG_SECURITY,
+            c.GET_LAN_CONFIG_SEC_INFO, parseNode, toParse, test
+            )
+
+        return theInfo
+
+    ##########################################################################
+    # SERVICE_WAN_IP_CONNECTION
+    ##########################################################################
+    # **NEW**
+    def get_wan_ip_con_info(self, test=False):
+        """Parse WANIPConnection Info and return dict."""
+        theLog = "Get WANIPConnection Info"
+        parseNode = f".//{c.GET_WAN_IP_CON_INFO}Response"
+        toParse = [
+            'NewEnable',
+            'NewConnectionType',
+            'NewExternalIPAddress',
+            'NewSubnetMask',
+            'NewAddressingType',
+            'NewDefaultGateway',
+            'NewMACAddress',
+            'NewMACAddressOverride',
+            'NewMaxMTUSize',
+            'NewDNSEnabled',
+            'NewDNSServers'
+        ]
+
+        theInfo = self._get(
+            theLog, c.SERVICE_WAN_IP_CONNECTION,
+            c.GET_WAN_IP_CON_INFO, parseNode, toParse, test
+            )
+
+        return theInfo
 
     ##########################################################################
     # SERVICE_PARENTAL_CONTROL
@@ -700,6 +793,7 @@ class Netgear():
         return devices
 
     # def set_device_name_icon_by_mac(self):
+    # def set_device_name(self):
 
     ##########################################################################
     # SERVICE_ADVANCED_QOS
@@ -1071,8 +1165,20 @@ class Netgear():
     def get_available_channel(self, test=False):
         """Parse GetAvailableChannel and return dict."""
         theLog = "Get Available Channel"
-        parseNode = f".//{c.GET_AVAILABLE_CHANNEL}Response"
-        toParse = []
+        parseNode = f".//{c.GET_2G_INFO}Response"
+        toParse = [
+            'NewEnable',
+            'NewSSIDBroadcast',
+            'NewStatus',
+            'NewSSID',
+            'NewRegion',
+            'NewChannel',
+            'NewWirelessMode',
+            'NewBasicEncryptionModes',
+            'NewWEPAuthType',
+            'NewWPAEncryptionModes',
+            'NewWLANMACAddress',
+        ]
 
         theInfo = self._get(
             theLog, c.SERVICE_WLAN_CONFIGURATION, c.GET_AVAILABLE_CHANNEL,
@@ -1119,3 +1225,20 @@ class Netgear():
             )
 
         return theInfo
+
+    # **NEW**
+    def get_smart_connect_enabled(self, test=False):
+        """Parse IsSmartConnectEnabled and return dict."""
+        theLog = "Get Smart Connect Status"
+        parseNode = f".//{c.GET_SMART_CONNECT_ENABLED}Response"
+        toParse = ['NewSmartConnectEnable']
+        theInfo = self._get(
+            theLog, c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_SMART_CONNECT_ENABLED, parseNode, toParse, test
+            )
+
+        return theInfo
+
+    # **NEW**
+    # def set_smart_connect_enabled(self, test=False, value='0'):
+    # SET_SMART_CONNECT_ENABLED
