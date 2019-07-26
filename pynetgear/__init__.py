@@ -1065,7 +1065,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g1_guest_access_enabled_2(self, test=False, value='0'):
+    def set_5g_guest_access_enabled_3(self, test=False, value='0'):
         """Set Set5G1GuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -1240,5 +1240,21 @@ class Netgear():
         return theInfo
 
     # **NEW**
-    # def set_smart_connect_enabled(self, test=False, value='0'):
-    # SET_SMART_CONNECT_ENABLED
+    def set_smart_connect_enabled(self, test=False, value='0'):
+        """Set SetSmartConnectEnable."""
+        theLog = {}
+        theLog[0] = "Setting Smart Connect Enabled"
+        theLog[1] = "Could not successfully enable smart connect"
+        value = h.value_to_zero_or_one(value)
+        theRequest = {
+            "service": c.SERVICE_WLAN_CONFIGURATION,
+            "method": c.SET_SMART_CONNECT_ENABLED,
+            "params": {"NewSmartConnectEnable": value},
+            "body": "",
+            "need_auth": True
+        }
+
+        theResponse = self._set(theLog, theRequest, test)
+
+        return theResponse
+    # 

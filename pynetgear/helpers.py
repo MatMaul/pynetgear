@@ -49,6 +49,8 @@ def to_get(parseNode, toParse, response):
         theItem = xml_get(theNode, x)
         if theItem:
             theInfo[x] = theItem
+        else:
+            theInfo[x] = None
 
     return theInfo
 
@@ -117,7 +119,9 @@ def is_valid_response(resp):
     """Check if is valid."""
     return (resp.status_code == 200 and
             ("<ResponseCode>0000</ResponseCode>" in resp.text or
-             "<ResponseCode>000</ResponseCode>" in resp.text
+             "<ResponseCode>000</ResponseCode>" in resp.text or
+             "<ResponseCode>2</ResponseCode>" in resp.text or  # Speed Test Result
+             "<ResponseCode>001</ResponseCode>" in resp.text  # dns_masq/mac_address
              ))
 
 
