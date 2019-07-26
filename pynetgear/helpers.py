@@ -120,8 +120,10 @@ def is_valid_response(resp):
     return (resp.status_code == 200 and
             ("<ResponseCode>0000</ResponseCode>" in resp.text or
              "<ResponseCode>000</ResponseCode>" in resp.text or
-             "<ResponseCode>2</ResponseCode>" in resp.text or  # Speed Test Result
-             "<ResponseCode>001</ResponseCode>" in resp.text  # dns_masq/mac_address
+             # Speed Test Result
+             "<ResponseCode>2</ResponseCode>" in resp.text or
+             # dns_masq/mac_address
+             "<ResponseCode>001</ResponseCode>" in resp.text
              ))
 
 

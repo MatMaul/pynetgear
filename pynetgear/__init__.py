@@ -1257,4 +1257,3 @@ class Netgear():
         theResponse = self._set(theLog, theRequest, test)
 
         return theResponse
-    # 
