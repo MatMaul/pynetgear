@@ -241,7 +241,7 @@ class Netgear():
 
     # def logout(self):
 
-    def reboot(self, test=False, value='0'):
+    def reboot(self, value='0', test=False):
         """Reboot Router."""
         theLog = {}
         theLog[0] = "Rebooting Router"
@@ -366,7 +366,7 @@ class Netgear():
 
         return theInfo
 
-    def set_block_device_enable(self, test=False, value='0'):
+    def set_block_device_enable(self, value='0', test=False):
         """Set SetBlockDeviceEnable."""
         theLog = {}
         theLog[0] = "Setting Block Device Enabled"
@@ -478,7 +478,7 @@ class Netgear():
 
         return {t: h.parse_text(value) for t, value in theInfo.items()}
 
-    def enable_traffic_meter(self, test=False, value='0'):
+    def enable_traffic_meter(self, value='0', test=False):
         """Set EnableTrafficMeter."""
         theLog = {}
         theLog[0] = "Enabling Traffic Meter"
@@ -582,7 +582,7 @@ class Netgear():
 
         return theInfo
 
-    def enable_parental_control(self, test=False, value='0'):
+    def enable_parental_control(self, value='0', test=False):
         """Set EnableParentalControl."""
         theLog = {}
         theLog[0] = "Enabling Parental Control"
@@ -848,7 +848,7 @@ class Netgear():
 
         return theInfo
 
-    def set_qos_enable_status(self, test=False, value='0'):
+    def set_qos_enable_status(self, value='0', test=False):
         """Set SetQoSEnableStatus."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -993,7 +993,7 @@ class Netgear():
 
         return theInfo
 
-    def set_guest_access_enabled(self, test=False, value='0'):
+    def set_guest_access_enabled(self, value='0', test=False):
         """Set SetGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -1011,7 +1011,7 @@ class Netgear():
 
         return theResponse
 
-    def set_guest_access_enabled_2(self, test=False, value='0'):
+    def set_guest_access_enabled_2(self, value='0', test=False):
         """Set SetGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting Guest Access Enabled"
@@ -1029,7 +1029,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled(self, test=False, value='0'):
+    def set_5g_guest_access_enabled(self, value='0', test=False):
         """Set Set5GGuestAccessEnabled."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -1047,7 +1047,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled_2(self, test=False, value='0'):
+    def set_5g_guest_access_enabled_2(self, value='0', test=False):
         """Set Set5GGuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -1065,7 +1065,7 @@ class Netgear():
 
         return theResponse
 
-    def set_5g_guest_access_enabled_3(self, test=False, value='0'):
+    def set_5g_guest_access_enabled_3(self, value='0', test=False):
         """Set Set5G1GuestAccessEnabled2."""
         theLog = {}
         theLog[0] = "Setting 5G Guest Access Enabled"
@@ -1240,7 +1240,7 @@ class Netgear():
         return theInfo
 
     # **NEW**
-    def set_smart_connect_enabled(self, test=False, value='0'):
+    def set_smart_connect_enabled(self, value='0', test=False):
         """Set SetSmartConnectEnable."""
         theLog = {}
         theLog[0] = "Setting Smart Connect Enabled"
