@@ -348,9 +348,9 @@ class Netgear(object):
 
         if not success:
             return False
-        
+
         return True
-    
+
     def _get_headers(self, service, method, need_auth=True):
         headers = _get_soap_headers(service, method)
         # if the stored cookie is not a str then we are
