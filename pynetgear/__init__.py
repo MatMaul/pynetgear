@@ -140,7 +140,7 @@ class Netgear(object):
             return None
 
         success, node = _find_node(
-            response.text,
+            _fix_double_unknown(response.text),
             ".//GetAttachDeviceResponse/NewAttachDevice")
         if not success:
             return None
@@ -478,6 +478,12 @@ def _convert(value, to_type, default=None):
     except ValueError:
         # If value could not be converted
         return default
+
+
+def _fix_double_unknown(text):
+    """Add missing semicolon between two <unknown>'s."""
+    return text.replace("&lt;unknown&gt;&lt;unknown&gt;",
+                        "&lt;unknown&gt;;&lt;unknown&gt;")
 
 
 SERVICE_PREFIX = "urn:NETGEAR-ROUTER:service:"
