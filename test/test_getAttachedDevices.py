@@ -3,17 +3,19 @@ from unittest import mock
 
 # Import from the local version of pynetgear
 from inspect import getsourcefile
-import os.path as path, sys
-current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
-netgear_dir = current_dir + '/../pynetgear'
+import sys
+import os.path as path
+
+current_dir = path.dirname(path.abspath(getsourcefile(lambda: 0)))
+netgear_dir = current_dir + "/../pynetgear"
 sys.path.insert(0, netgear_dir)
-from __init__ import Netgear, Device
+from __init__ import Netgear, Device  # noqa: E402
 
 
 class TestGetAttachedDevices(unittest.TestCase):
     def test_noSignalType(self):
         spy = NetgearSpy(RESPONSE_NO_SIGNAL_TYPE)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
 
         result = spy.get_attached_devices()
         assert result == [
@@ -47,7 +49,7 @@ class TestGetAttachedDevices(unittest.TestCase):
 
     def test_withSignalType(self):
         spy = NetgearSpy(RESPONSE_WITH_SIGNAL_TYPE)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
 
         result = spy.get_attached_devices()
         assert result == [
@@ -81,19 +83,19 @@ class TestGetAttachedDevices(unittest.TestCase):
 
     def test_invalidResponse(self):
         spy = NetgearSpy(RESPONSE_INVALID)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
         result = spy.get_attached_devices()
         assert result is None
 
     def test_responseMissingSplitChar(self):
         spy = NetgearSpy(RESPONSE_MISSGING_SPLIT_CHAR)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
         result = spy.get_attached_devices()
         assert result == []
 
     def test_responseUnknownDevice(self):
         spy = NetgearSpy(RESONSE_UNKOWN_DEVICE)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
         result = spy.get_attached_devices()
         assert result == [
             Device(
@@ -110,10 +112,10 @@ class TestGetAttachedDevices(unittest.TestCase):
                 conn_ap_mac=None,
             )
         ]
-    
+
     def test_double_unknown_response(self):
         spy = NetgearSpy(RESPONSE_DOUBLE_UNKNOWN)
-        mocked_netgear = mock.Mock(wraps=spy)
+        mock.Mock(wraps=spy)
         result = spy.get_attached_devices()
         assert result == [
             Device(
@@ -130,7 +132,6 @@ class TestGetAttachedDevices(unittest.TestCase):
                 conn_ap_mac=None,
             )
         ]
-
 
 
 class NetgearSpy(Netgear):
@@ -152,7 +153,8 @@ class MockResponse:
             xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
             SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
             <SOAP-ENV:Body>
-            <m:GetAttachDeviceResponse xmlns:m="urn:NETGEAR-ROUTER:service:DeviceInfo:1">"""
+            <m:GetAttachDeviceResponse
+            xmlns:m="urn:NETGEAR-ROUTER:service:DeviceInfo:1">"""
             + text
             + """
             </m:GetAttachDeviceResponse>
