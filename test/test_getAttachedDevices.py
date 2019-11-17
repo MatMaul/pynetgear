@@ -1,6 +1,13 @@
 import unittest
 from unittest import mock
-from pynetgear import Netgear, Device
+
+# Import from the local version of pynetgear
+from inspect import getsourcefile
+import os.path as path, sys
+current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
+netgear_dir = current_dir + '/../pynetgear'
+sys.path.insert(0, netgear_dir)
+from __init__ import Netgear, Device
 
 
 class TestGetAttachedDevices(unittest.TestCase):
@@ -103,6 +110,27 @@ class TestGetAttachedDevices(unittest.TestCase):
                 conn_ap_mac=None,
             )
         ]
+    
+    def test_double_unknown_response(self):
+        spy = NetgearSpy(RESPONSE_DOUBLE_UNKNOWN)
+        mocked_netgear = mock.Mock(wraps=spy)
+        result = spy.get_attached_devices()
+        assert result == [
+            Device(
+                signal=88,
+                ip="<unknown>",
+                name="<unknown>",
+                mac="00:11:22:33:44:55",
+                type="wireless",
+                link_rate=84,
+                allow_or_block="Allow",
+                device_type=None,
+                device_model=None,
+                ssid=None,
+                conn_ap_mac=None,
+            )
+        ]
+
 
 
 class NetgearSpy(Netgear):
@@ -159,6 +187,12 @@ UNKNOWN#FORMATTING\
 RESONSE_UNKOWN_DEVICE = MockResponse(
     "<NewAttachDevice>\
 1@1;192.168.1.2;&lt;unknown&gt;;10:68:3F:AA:AA:AA\
+</NewAttachDevice>"
+)
+
+RESPONSE_DOUBLE_UNKNOWN = MockResponse(
+    "<NewAttachDevice>\
+@1;&lt;unknown&gt;&lt;unknown&gt;;00:11:22:33:44:55;wireless;84;88;Allow\
 </NewAttachDevice>"
 )
 
