@@ -158,6 +158,37 @@ class Netgear(object):
 
         return success
 
+    def get_info(self):
+        """
+        Return router informations, like:
+        - ModelName
+        - DeviceName
+        - SerialNumber
+        - Firmwareversion
+        - FirewallVersion
+        - Hardwareversion
+        - FirmwareLastUpdate
+        - FirmwareLastChecked
+
+        Returns None if error occurred.
+        """
+        _LOGGER.debug("Get Info")
+
+        success, response = self._make_request(
+            SERVICE_DEVICE_INFO,
+            "GetInfo"
+        )
+        if not success:
+            return None
+
+        success, node = _find_node(
+            response.text,
+            ".//GetInfoResponse")
+        if not success:
+            return None
+
+        return {t.tag: t.text for t in node}
+
     def get_attached_devices(self):
         """
         Return list of connected devices to the router.
