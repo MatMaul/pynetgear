@@ -44,16 +44,35 @@ BLOCK = "Block"
 ALLOW = "Allow"
 
 Device = namedtuple(
-    "Device", ["name", "ip", "mac", "type", "signal", "link_rate",
-               "allow_or_block", "device_type", "device_model",
-               "ssid", "conn_ap_mac"])
+    "Device", [
+        "name",
+        "ip",
+        "mac",
+        "type",
+        "signal",
+        "link_rate",
+        "allow_or_block",
+        "device_type",
+        "device_model",
+        "ssid",
+        "conn_ap_mac"
+    ]
+)
 
 
 class Netgear(object):
     """Represents a session to a Netgear Router."""
 
-    def __init__(self, password=None, host=None, user=None, port=None,
-                 ssl=False, url=None, force_login_v2=False):
+    def __init__(
+        self,
+        password=None,
+        host=None,
+        user=None,
+        port=None,
+        ssl=False,
+        url=None,
+        force_login_v2=False
+    ):
         """Initialize a Netgear session."""
         if not url and not host and not port:
             url = autodetect_url()
@@ -66,8 +85,11 @@ class Netgear(object):
             if not port:
                 port = DEFAULT_PORT
             scheme = "https" if ssl else "http"
-            self.soap_url = "{}://{}:{}/soap/server_sa/".format(scheme,
-                                                                host, port)
+            self.soap_url = "{}://{}:{}/soap/server_sa/".format(
+                scheme,
+                host,
+                port
+            )
 
         if not user:
             user = DEFAULT_USER
@@ -85,6 +107,7 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
+        self.cookie = None
         if not self.force_login_v2:
             v1_result = self.login_v1()
             if v1_result:
@@ -94,11 +117,17 @@ class Netgear(object):
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
-        self.cookie = None
 
-        success, response = self._make_request(SERVICE_DEVICE_CONFIG, "SOAPLogin",
-                                               {"Username": self.username, "Password": self.password},
-                                               None, False)
+        success, response = self._make_request(
+            SERVICE_DEVICE_CONFIG,
+            "SOAPLogin",
+            {
+                "Username": self.username,
+                "Password": self.password
+            },
+            None,
+            False
+        )
 
         if not success:
             return None
@@ -117,8 +146,13 @@ class Netgear(object):
         body = LOGIN_V1_BODY.format(username=self.username,
                                     password=self.password)
 
-        success, _ = self._make_request("ParentalControl:1", "Authenticate",
-                                        None, body, False)
+        success, _ = self._make_request(
+            "ParentalControl:1",
+            "Authenticate",
+            None,
+            body,
+            False
+        )
 
         self.cookie = success
 
@@ -130,10 +164,12 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.info("Get attached devices")
+        _LOGGER.debug("Get attached devices")
 
-        success, response = self._make_request(SERVICE_DEVICE_INFO,
-                                               "GetAttachDevice")
+        success, response = self._make_request(
+            SERVICE_DEVICE_INFO,
+            "GetAttachDevice"
+        )
 
         if not success:
             _LOGGER.error("Get attached devices failed")
@@ -165,8 +201,10 @@ class Netgear(object):
 
         if entry_count is not None and entry_count != len(entries):
             _LOGGER.info(
-                """Number of devices should \
-                 be: %d but is: %d""", entry_count, len(entries))
+                "Number of devices should be: %d but is: %d",
+                entry_count,
+                len(entries)
+            )
 
         for entry in entries:
             info = entry.split(";")
@@ -207,10 +245,12 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.info("Get attached devices 2")
+        _LOGGER.debug("Get attached devices 2")
 
-        success, response = self._make_request(SERVICE_DEVICE_INFO,
-                                               "GetAttachDevice2")
+        success, response = self._make_request(
+            SERVICE_DEVICE_INFO,
+            "GetAttachDevice2"
+        )
         if not success:
             return None
 
@@ -234,9 +274,21 @@ class Netgear(object):
             device_model = _xml_get(d, 'DeviceModel')
             ssid = _xml_get(d, 'SSID')
             conn_ap_mac = _xml_get(d, 'ConnAPMAC')
-            devices.append(Device(name, ip, mac, link_type, signal, link_rate,
-                                  allow_or_block, device_type, device_model,
-                                  ssid, conn_ap_mac))
+            devices.append(
+                Device(
+                    name,
+                    ip,
+                    mac,
+                    link_type,
+                    signal,
+                    link_rate,
+                    allow_or_block,
+                    device_type,
+                    device_model,
+                    ssid,
+                    conn_ap_mac
+                )
+            )
 
         return devices
 
@@ -246,7 +298,7 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.info("Get traffic meter")
+        _LOGGER.debug("Get traffic meter")
 
         def parse_text(text):
             """
@@ -266,8 +318,10 @@ class Netgear(object):
             except ValueError:
                 return None
 
-        success, response = self._make_request(SERVICE_DEVICE_CONFIG,
-                                               "GetTrafficMeterStatistics")
+        success, response = self._make_request(
+            SERVICE_DEVICE_CONFIG,
+            "GetTrafficMeterStatistics"
+        )
         if not success:
             return None
 
@@ -284,10 +338,15 @@ class Netgear(object):
         Start a configuration session.
         For managing router admin functionality (ie allowing/blocking devices)
         """
-        _LOGGER.info("Config start")
+        _LOGGER.debug("Config start")
 
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "ConfigurationStarted", {"NewSessionID": SESSION_ID})
+            SERVICE_DEVICE_CONFIG,
+            "ConfigurationStarted",
+            {
+                "NewSessionID": SESSION_ID
+            }
+        )
 
         self.config_started = success
         return success
@@ -297,12 +356,17 @@ class Netgear(object):
         End of a configuration session.
         Tells the router we're done managing admin functionality.
         """
-        _LOGGER.info("Config finish")
+        _LOGGER.debug("Config finish")
         if not self.config_started:
             return True
 
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "ConfigurationFinished", {"NewStatus": "ChangesApplied"})
+            SERVICE_DEVICE_CONFIG,
+            "ConfigurationFinished",
+            {
+                "NewStatus": "ChangesApplied"
+            }
+        )
 
         self.config_started = not success
         return success
@@ -314,7 +378,7 @@ class Netgear(object):
         device_status you wish to set the device to: Allow (allow device to access the
         network) or Block (block the device from accessing the network).
         """
-        _LOGGER.info("Allow block device")
+        _LOGGER.debug("Allow block device")
         if self.config_started:
             _LOGGER.error("Inconsistant configuration state, configuration already started")
             return False
@@ -324,8 +388,13 @@ class Netgear(object):
             return False
 
         success, _ = self._make_request(
-            SERVICE_DEVICE_CONFIG, "SetBlockDeviceByMAC",
-            {"NewAllowOrBlock": device_status, "NewMACAddress": mac_addr})
+            SERVICE_DEVICE_CONFIG,
+            "SetBlockDeviceByMAC",
+            {
+                "NewAllowOrBlock": device_status,
+                "NewMACAddress": mac_addr
+            }
+        )
 
         if not success:
             _LOGGER.error("Could not successfully call allow/block device")
@@ -345,8 +414,14 @@ class Netgear(object):
             headers["Cookie"] = self.cookie
         return headers
 
-    def _make_request(self, service, method, params=None, body="",
-                      need_auth=True):
+    def _make_request(
+        self,
+        service,
+        method,
+        params=None,
+        body="",
+        need_auth=True
+    ):
         """Make an API request to the router."""
         # If we have no cookie (v2) or never called login before (v1)
         # and we need auth, the request will fail for sure.
