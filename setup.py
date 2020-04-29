@@ -1,13 +1,22 @@
 from setuptools import setup
+from codecs import open
 
-setup(name='pynetgear',
-      version='0.6.1',
-      description='Access Netgear routers using their SOAP API',
-      url='http://github.com/MatMaul/pynetgear',
-      download_url='http://github.com/MatMaul/pynetgear/archive/0.6.1.tar.gz',
-      author='Paulus Schoutsen',
-      author_email='Paulus@PaulusSchoutsen.nl',
-      license='MIT',
-      install_requires=['requests>=2.0'],
-      packages=['pynetgear'],
-      zip_safe=True)
+REPO_URL = "http://github.com/MatMaul/pynetgear"
+VERSION = "0.6.1"
+
+with open("requirements.txt") as f:
+    required = f.read().splitlines()
+
+setup(
+    name="pynetgear",
+    version=VERSION,
+    description="Access Netgear routers using their SOAP API",
+    url=REPO_URL,
+    download_url=REPO_URL + "/tarball/" + VERSION,
+    author="Paulus Schoutsen",
+    author_email="Paulus@PaulusSchoutsen.nl",
+    license="MIT",
+    install_requires=required,
+    packages=["pynetgear"],
+    zip_safe=True,
+)

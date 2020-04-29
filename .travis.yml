@@ -1,9 +1,19 @@
+os: linux
+dist: xenial
+
 language: python
 python:
-  - '3.4'
-  - '2.7'
+  - 2.7
+  - 3.4
+  - 3.8
+cache:
+  pip: true
 
 before_install:
-  - pip install flake8
+  - pip install -r requirements_all.txt
+  - pip install -e .
+install:
+  - python setup.py install
+  - python setup.py sdist
 script:
   - flake8 pynetgear
