@@ -464,10 +464,6 @@ class Netgear(object):
             _LOGGER.error("Could not successfully call reboot")
             return False
 
-        #if not self.config_finish():
-        #   LOGGER.error("Inconsistant configuration state, configuration already finished")
-        #   return False
-
         return True
 
     def _make_request(
