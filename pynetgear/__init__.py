@@ -159,12 +159,12 @@ class Netgear(object):
         self.cookie = success
 
         # check login succes with info call
-        if self.get_info(use_cache = False) is None:
+        if self.get_info(use_cache=False) is None:
             return False
 
         return success
 
-    def get_info(self, use_cache = True):
+    def get_info(self, use_cache=True):
         """
         Return router informations, like:
         - ModelName
