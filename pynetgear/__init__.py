@@ -101,6 +101,8 @@ class Netgear(object):
         self.cookie = None
         self.config_started = False
 
+        self._info = None
+
     def login(self):
         """
         Login to the router.
@@ -156,9 +158,13 @@ class Netgear(object):
 
         self.cookie = success
 
+        # check login succes with info call
+        if self.get_info(use_cache = False) is None:
+            return False
+
         return success
 
-    def get_info(self):
+    def get_info(self, use_cache = True):
         """
         Return router informations, like:
         - ModelName
@@ -174,6 +180,9 @@ class Netgear(object):
         """
         _LOGGER.debug("Get Info")
 
+        if self._info is not None and use_cache:
+            return self._info
+
         success, response = self._make_request(
             SERVICE_DEVICE_INFO,
             "GetInfo"
@@ -187,7 +196,9 @@ class Netgear(object):
         if not success:
             return None
 
-        return {t.tag: t.text for t in node}
+        self._info = {t.tag: t.text for t in node}
+
+        return self._info
 
     def get_attached_devices(self):
         """
