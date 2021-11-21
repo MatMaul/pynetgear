@@ -71,7 +71,8 @@ class Netgear(object):
         port=None,
         ssl=False,
         url=None,
-        force_login_v2=False
+        force_login_v1=False,
+
     ):
         """Initialize a Netgear session."""
         if not url and not host and not port:
@@ -97,7 +98,7 @@ class Netgear(object):
         self.username = user
         self.password = password
         self.port = port
-        self.force_login_v2 = force_login_v2
+        self.force_login_v1 = force_login_v1
         self.cookie = None
         self.config_started = False
 
@@ -107,13 +108,16 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
+        # cookie is also used to track if at least
+        # one login attempt has been made for v1
         self.cookie = None
-        if not self.force_login_v2:
-            v1_result = self.login_v1()
-            if v1_result:
-                return v1_result
 
-        return self.login_v2()
+        if not self.force_login_v1:
+            v2_result = self.login_v2()
+            if v2_result:
+                return v2_result
+
+        return self.login_v1()
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
@@ -130,15 +134,16 @@ class Netgear(object):
         )
 
         if not success:
-            return None
+            return False
 
         if 'Set-Cookie' in response.headers:
             self.cookie = response.headers['Set-Cookie']
         else:
             _LOGGER.error("Login v2 ok but no cookie...")
             _LOGGER.debug(response.headers)
+            return False
 
-        return self.cookie
+        return True
 
     def login_v1(self):
         _LOGGER.debug("Login v1")
