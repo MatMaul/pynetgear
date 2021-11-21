@@ -219,8 +219,7 @@ class Netgear(object):
                                             UNKNOWN_DEVICE_DECODED)
 
         if not decoded or decoded == "0":
-            _LOGGER.error("Can't parse attached devices string")
-            _LOGGER.debug(node.text.strip())
+            _LOGGER.info("Can't parse attached devices string")
             return devices
 
         entries = decoded.split("@")
