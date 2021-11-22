@@ -247,6 +247,8 @@ class Netgear(object):
             link_type = None
             link_rate = None
             allow_or_block = None
+            mac = None
+            name = None
 
             if len(info) >= 8:
                 allow_or_block = info[7]
@@ -254,12 +256,16 @@ class Netgear(object):
                 link_type = info[4]
                 link_rate = _convert(info[5], int)
                 signal = _convert(info[6], int)
+            if len(info) >= 4:
+                mac = info[3]
+            if len(info) >= 3:
+                name = info[2]
 
-            if len(info) < 4:
+            if len(info) < 2:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
-            ipv4, name, mac = info[1:4]
+            ipv4 = info[1]
 
             devices.append(Device(name, ipv4, mac,
                                   link_type, signal, link_rate, allow_or_block,
