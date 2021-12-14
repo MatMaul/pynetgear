@@ -101,6 +101,7 @@ class Netgear(object):
         self.force_login_v1 = force_login_v1
         self.cookie = None
         self.config_started = False
+        self._logging_in = False
 
         self._info = None
 
@@ -112,14 +113,22 @@ class Netgear(object):
         """
         # cookie is also used to track if at least
         # one login attempt has been made for v1
+        if self._logging_in:
+            _LOGGER.debug("Login re-attempt within the login, ignoring.")
+            return False
+
+        self._logging_in = True
         self.cookie = None
 
         if not self.force_login_v1:
             v2_result = self.login_v2()
             if v2_result:
+                self._logging_in = False
                 return v2_result
 
-        return self.login_v1()
+        v1_result = self.login_v1()
+        self._logging_in = False
+        return v1_result
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
@@ -190,6 +199,7 @@ class Netgear(object):
         _LOGGER.debug("Get Info")
 
         if self._info is not None and use_cache:
+            _LOGGER.debug("Info from cache.")
             return self._info
 
         success, response = self._make_request(
