@@ -145,6 +145,10 @@ class Netgear(object):
             _LOGGER.debug(response.headers)
             return False
 
+        # check login succes with info call
+        if self.get_info(use_cache=False) is None:
+            return False
+
         return True
 
     def login_v1(self):
