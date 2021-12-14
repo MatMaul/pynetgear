@@ -71,7 +71,8 @@ class Netgear(object):
         port=None,
         ssl=False,
         url=None,
-        force_login_v2=False
+        force_login_v1=False,
+
     ):
         """Initialize a Netgear session."""
         if not url and not host and not port:
@@ -97,7 +98,7 @@ class Netgear(object):
         self.username = user
         self.password = password
         self.port = port
-        self.force_login_v2 = force_login_v2
+        self.force_login_v1 = force_login_v1
         self.cookie = None
         self.config_started = False
 
@@ -109,13 +110,16 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
+        # cookie is also used to track if at least
+        # one login attempt has been made for v1
         self.cookie = None
-        if not self.force_login_v2:
-            v1_result = self.login_v1()
-            if v1_result:
-                return v1_result
 
-        return self.login_v2()
+        if not self.force_login_v1:
+            v2_result = self.login_v2()
+            if v2_result:
+                return v2_result
+
+        return self.login_v1()
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
@@ -132,15 +136,16 @@ class Netgear(object):
         )
 
         if not success:
-            return None
+            return False
 
         if 'Set-Cookie' in response.headers:
             self.cookie = response.headers['Set-Cookie']
         else:
             _LOGGER.error("Login v2 ok but no cookie...")
             _LOGGER.debug(response.headers)
+            return False
 
-        return self.cookie
+        return True
 
     def login_v1(self):
         _LOGGER.debug("Login v1")
@@ -230,8 +235,7 @@ class Netgear(object):
                                             UNKNOWN_DEVICE_DECODED)
 
         if not decoded or decoded == "0":
-            _LOGGER.error("Can't parse attached devices string")
-            _LOGGER.debug(node.text.strip())
+            _LOGGER.info("Can't parse attached devices string")
             return devices
 
         entries = decoded.split("@")
@@ -259,6 +263,8 @@ class Netgear(object):
             link_type = None
             link_rate = None
             allow_or_block = None
+            mac = None
+            name = None
 
             if len(info) >= 8:
                 allow_or_block = info[7]
@@ -266,12 +272,16 @@ class Netgear(object):
                 link_type = info[4]
                 link_rate = _convert(info[5], int)
                 signal = _convert(info[6], int)
+            if len(info) >= 4:
+                mac = info[3]
+            if len(info) >= 3:
+                name = info[2]
 
-            if len(info) < 4:
+            if len(info) < 2:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
-            ipv4, name, mac = info[1:4]
+            ipv4 = info[1]
 
             devices.append(Device(name, ipv4, mac,
                                   link_type, signal, link_rate, allow_or_block,
@@ -586,8 +596,8 @@ def _get_soap_headers(service, method):
 
 def _is_valid_response(resp):
     return (resp.status_code == 200 and
-            ("<ResponseCode>0000</ResponseCode>" in resp.text or
-             "<ResponseCode>000</ResponseCode>" in resp.text))
+            ("<ResponseCode>0000</" in resp.text or
+             "<ResponseCode>000</" in resp.text))
 
 
 def _is_unauthorized_response(resp):
