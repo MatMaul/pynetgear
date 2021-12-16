@@ -455,6 +455,27 @@ class Netgear(object):
             headers["Cookie"] = self.cookie
         return headers
 
+    def reboot(self):
+        _LOGGER.debug("reboot")
+        if self.config_started:
+            _LOGGER.error("Inconsistant configuration state, configuration already started")
+            return False
+
+        if not self.config_start():
+            _LOGGER.error("Could not start configuration")
+            return False
+
+        success, _ = self._make_request(
+            SERVICE_DEVICE_CONFIG,
+            "Reboot",
+            )
+
+        if not success:
+            _LOGGER.error("Could not successfully call reboot")
+            return False
+
+        return True
+
     def _make_request(
         self,
         service,
