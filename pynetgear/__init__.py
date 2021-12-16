@@ -72,7 +72,8 @@ class Netgear(object):
         ssl=False,
         url=None,
         force_login_v1=False,
-
+        # not used and only kept for backward compat, v2 being the default now
+        force_login_v2=False,
     ):
         """Initialize a Netgear session."""
         if not url and not host and not port:
