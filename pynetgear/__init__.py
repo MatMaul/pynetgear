@@ -111,13 +111,13 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
-        # cookie is also used to track if at least
-        # one login attempt has been made for v1
         if self._logging_in:
             _LOGGER.debug("Login re-attempt within the login, ignoring.")
             return False
-
         self._logging_in = True
+
+        # cookie is also used to track if at least
+        # one login attempt has been made for v1
         self.cookie = None
 
         if not self.force_login_v1:
