@@ -102,6 +102,9 @@ class Netgear(object):
         self.force_login_v1 = force_login_v1
         self.cookie = None
         self.config_started = False
+        self._logging_in = False
+
+        self._info = None
 
     def login(self):
         """
@@ -109,6 +112,11 @@ class Netgear(object):
 
         Will be called automatically by other actions.
         """
+        if self._logging_in:
+            _LOGGER.debug("Login re-attempt within the login, ignoring.")
+            return False
+        self._logging_in = True
+
         # cookie is also used to track if at least
         # one login attempt has been made for v1
         self.cookie = None
@@ -116,9 +124,12 @@ class Netgear(object):
         if not self.force_login_v1:
             v2_result = self.login_v2()
             if v2_result:
+                self._logging_in = False
                 return v2_result
 
-        return self.login_v1()
+        v1_result = self.login_v1()
+        self._logging_in = False
+        return v1_result
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
@@ -162,9 +173,13 @@ class Netgear(object):
 
         self.cookie = success
 
+        # check login succes with info call
+        if self.get_info(use_cache=False) is None:
+            return False
+
         return success
 
-    def get_info(self):
+    def get_info(self, use_cache=True):
         """
         Return router informations, like:
         - ModelName
@@ -180,6 +195,10 @@ class Netgear(object):
         """
         _LOGGER.debug("Get Info")
 
+        if self._info is not None and use_cache:
+            _LOGGER.debug("Info from cache.")
+            return self._info
+
         success, response = self._make_request(
             SERVICE_DEVICE_INFO,
             "GetInfo"
@@ -193,7 +212,9 @@ class Netgear(object):
         if not success:
             return None
 
-        return {t.tag: t.text for t in node}
+        self._info = {t.tag: t.text for t in node}
+
+        return self._info
 
     def get_attached_devices(self):
         """
