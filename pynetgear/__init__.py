@@ -132,9 +132,9 @@ class Netgear(object):
         for idx in range(0, len(login_methods)):
             login_version = (idx + self._login_version) % len(login_methods)
             login_method = login_methods[login_version-1]
-            _LOGGER.debug("Attempting login using %s" ,login_method.__name__)
+            _LOGGER.debug("Attempting login using %s" , login_method.__name__)
             if login_method():
-                # login succeeded, next time start trying with this login method
+                # login succeeded, next time start with this login method
                 self._logging_in = False
                 self._login_version = login_version
                 return True
