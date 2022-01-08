@@ -74,6 +74,7 @@ class Netgear(object):
         force_login_v1=False,
         # not used and only kept for backward compat, v2 being the default now
         force_login_v2=False,
+        get_attached_devices_version=1,
     ):
         """Initialize a Netgear session."""
         if not url and not host and not port:
@@ -103,6 +104,7 @@ class Netgear(object):
         self.cookie = None
         self.config_started = False
         self._logging_in = False
+        self._get_attached_devices_version = get_attached_devices_version
 
         self._info = None
 
@@ -217,12 +219,27 @@ class Netgear(object):
         return self._info
 
     def get_attached_devices(self):
+        get_devices_methods = [self.get_attached_devices_1, self.get_attached_devices_2]
+        for idx in range(0, len(get_devices_methods)):
+            method_version = (idx + self._get_attached_devices_version) % len(get_devices_methods)
+            method = get_devices_methods[method_version-1]
+            devices = method()
+            if devices:
+                # Succeeded, next time start with this method
+                self._get_attached_devices_version = method_version
+                return devices
+
+        # Failed, next time start trying with the other method
+        self._get_attached_devices_version = method_version + 1
+        return None
+
+    def get_attached_devices_1(self):
         """
         Return list of connected devices to the router.
 
         Returns None if error occurred.
         """
-        _LOGGER.debug("Get attached devices")
+        _LOGGER.debug("Get attached devices V1")
 
         success, response = self._make_request(
             SERVICE_DEVICE_INFO,
@@ -308,7 +325,7 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.debug("Get attached devices 2")
+        _LOGGER.debug("Get attached devices V2")
 
         success, response = self._make_request(
             SERVICE_DEVICE_INFO,
