@@ -219,9 +219,12 @@ class Netgear(object):
         return self._info
 
     def get_attached_devices(self):
-        get_devices_methods = [self.get_attached_devices_1, self.get_attached_devices_2]
+        get_devices_methods = [self.get_attached_devices_1,
+                               self.get_attached_devices_2]
         for idx in range(0, len(get_devices_methods)):
-            method_version = (idx + self._get_attached_devices_version) % len(get_devices_methods)
+            method_version = (idx + self._get_attached_devices_version) % len(
+                get_devices_methods
+            )
             method = get_devices_methods[method_version-1]
             devices = method()
             if devices:
