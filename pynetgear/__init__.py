@@ -538,7 +538,8 @@ class Netgear(object):
                 # or the IP-bound (?) session expired (v1)
                 self.cookie = None
 
-                _LOGGER.debug("Unauthorized response, let's login and retry...")
+                _LOGGER.debug("Unauthorized response, "
+                              "let's login and retry...")
                 if not self.login():
                     _LOGGER.error("Unauthorized response, re-login failed")
                     return False, response
@@ -546,15 +547,18 @@ class Netgear(object):
                 # reset headers with new cookie first and re-try
                 headers = self._get_headers(service, method, need_auth)
                 response = requests.post(self.soap_url, headers=headers,
-                                         data=message, timeout=30, verify=False)
+                                         data=message, timeout=30,
+                                         verify=False)
 
             success = _is_valid_response(response)
             if not success:
                 if _is_unauthorized_response(response):
-                    _LOGGER.error("Unauthorized response, after seemingly successful re-login")
+                    _LOGGER.error("Unauthorized response, "
+                                  "after seemingly successful re-login")
                 else:
                     _LOGGER.error("Invalid response")
-                    _LOGGER.debug("%s\n%s\n%s", response.status_code, str(response.headers), response.text)
+                    _LOGGER.debug("%s\n%s\n%s", response.status_code,
+                                  str(response.headers), response.text)
 
             return success, response
 
