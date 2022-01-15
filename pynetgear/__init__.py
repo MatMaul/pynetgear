@@ -111,7 +111,8 @@ class Netgear(object):
             return self.url + "/soap/server_sa/"
 
         scheme = "https" if self.ssl else "http"
-        return "{}://{}:{}/soap/server_sa/".format(scheme, self.host, self.port)
+        return "{}://{}:{}/soap/server_sa/".format(
+            scheme, self.host, self.port)
 
     def login_try_port(self):
         # first try the currently configured port-ssl combination
