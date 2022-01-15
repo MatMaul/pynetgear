@@ -72,7 +72,6 @@ class Netgear(object):
         ssl=False,
         url=None,
         force_login_v1=False,
-        # not used and only kept for backward compat, v2 being the default now
         force_login_v2=False,
     ):
         """Initialize a Netgear session."""
@@ -100,9 +99,11 @@ class Netgear(object):
         self.password = password
         self.port = port
         self.force_login_v1 = force_login_v1
+        self.force_login_v2 = force_login_v2
         self.cookie = None
         self.config_started = False
         self._logging_in = False
+        self._login_version = 2
 
         self._info = None
 
@@ -121,15 +122,27 @@ class Netgear(object):
         # one login attempt has been made for v1
         self.cookie = None
 
-        if not self.force_login_v1:
-            v2_result = self.login_v2()
-            if v2_result:
-                self._logging_in = False
-                return v2_result
+        # if a force option is given always start with that method
+        if self.force_login_v1:
+            self._login_version = 1
+        if self.force_login_v2:
+            self._login_version = 2
 
-        v1_result = self.login_v1()
+        login_methods = [self.login_v1, self.login_v2]
+        for idx in range(0, len(login_methods)):
+            login_version = (idx + self._login_version) % len(login_methods)
+            login_method = login_methods[login_version-1]
+            _LOGGER.debug("Attempting login using %s", login_method.__name__)
+            if login_method():
+                # login succeeded, next time start with this login method
+                self._logging_in = False
+                self._login_version = login_version
+                return True
+
+        # login failed, next time start trying with the other login method
         self._logging_in = False
-        return v1_result
+        self._login_version = self._login_version + 1
+        return False
 
     def login_v2(self):
         _LOGGER.debug("Login v2")
@@ -177,7 +190,7 @@ class Netgear(object):
         if self.get_info(use_cache=False) is None:
             return False
 
-        return success
+        return True
 
     def get_info(self, use_cache=True):
         """
