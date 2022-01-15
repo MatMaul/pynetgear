@@ -134,7 +134,7 @@ class Netgear(object):
         # reset original port-ssl
         self.port = current_port[0]
         self.ssl = current_port[1]
-        _LOGGER.debug("login using all known port-ssl combinations failed.")
+        _LOGGER.error("login using all known port-ssl combinations failed.")
         return False
 
     def login(self):
