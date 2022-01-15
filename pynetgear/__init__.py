@@ -10,7 +10,10 @@ import re
 import sys
 
 import requests
+from urllib3 import disable_warnings
+from urllib3.exceptions import InsecureRequestWarning
 
+disable_warnings(InsecureRequestWarning)
 
 # define regex to filter invalid XML codes
 # cf https://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
