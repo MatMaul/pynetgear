@@ -127,7 +127,8 @@ class Netgear(object):
             self.port = port[0]
             self.ssl = port[1]
             if self.login():
-                _LOGGER.info("Login succeeded using non default port '%i' and ssl '%r'.", self.port, self.ssl)
+                _LOGGER.info("Login succeeded using non default port "
+                             "'%i' and ssl '%r'.", self.port, self.ssl)
                 return True
 
         # reset original port-ssl
