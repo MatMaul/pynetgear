@@ -40,6 +40,7 @@ _illegal_xml_chars_RE = re.compile(u'[%s]' % u''.join(_illegal_ranges))
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
 DEFAULT_PORT = 5000
+ALL_PORTS = [(5555, True), (443, True), (5000, False), (80, False)]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -81,26 +82,19 @@ class Netgear(object):
         if not url and not host and not port:
             url = autodetect_url()
 
-        if url:
-            self.soap_url = url + "/soap/server_sa/"
-        else:
-            if not host:
-                host = DEFAULT_HOST
-            if not port:
-                port = DEFAULT_PORT
-            scheme = "https" if ssl else "http"
-            self.soap_url = "{}://{}:{}/soap/server_sa/".format(
-                scheme,
-                host,
-                port
-            )
-
+        if not host:
+            host = DEFAULT_HOST
+        if not port:
+            port = DEFAULT_PORT
         if not user:
             user = DEFAULT_USER
 
         self.username = user
         self.password = password
+        self.url = url
+        self.host = host
         self.port = port
+        self.ssl = ssl
         self.force_login_v1 = force_login_v1
         self.force_login_v2 = force_login_v2
         self.cookie = None
@@ -109,6 +103,40 @@ class Netgear(object):
         self._login_version = 2
 
         self._info = None
+
+    @property
+    def soap_url(self):
+        """SOAP url to connect to the router."""
+        if self.url:
+            return self.url + "/soap/server_sa/"
+
+        scheme = "https" if self.ssl else "http"
+        return "{}://{}:{}/soap/server_sa/".format(
+            scheme, self.host, self.port)
+
+    def login_try_port(self):
+        # first try the currently configured port-ssl combination
+        current_port = (self.port, self.ssl)
+        if self.login():
+            return True
+
+        ports = ALL_PORTS.copy()
+        if current_port in ports:
+            ports.remove(current_port)
+
+        for port in ports:
+            self.port = port[0]
+            self.ssl = port[1]
+            if self.login():
+                _LOGGER.info("Login succeeded using non default port "
+                             "'%i' and ssl '%r'.", self.port, self.ssl)
+                return True
+
+        # reset original port-ssl
+        self.port = current_port[0]
+        self.ssl = current_port[1]
+        _LOGGER.error("login using all known port-ssl combinations failed.")
+        return False
 
     def login(self):
         """
@@ -135,7 +163,6 @@ class Netgear(object):
         for idx in range(0, len(login_methods)):
             login_version = (idx + self._login_version) % len(login_methods)
             login_method = login_methods[login_version-1]
-            _LOGGER.debug("Attempting login using %s", login_method.__name__)
             if login_method():
                 # login succeeded, next time start with this login method
                 self._logging_in = False
@@ -148,7 +175,7 @@ class Netgear(object):
         return False
 
     def login_v2(self):
-        _LOGGER.debug("Login v2")
+        _LOGGER.debug("Login v2, port '%i', ssl, '%r'", self.port, self.ssl)
 
         success, response = self._make_request(
             SERVICE_DEVICE_CONFIG,
@@ -174,7 +201,7 @@ class Netgear(object):
         return True
 
     def login_v1(self):
-        _LOGGER.debug("Login v1")
+        _LOGGER.debug("Login v1, port '%i', ssl, '%r'", self.port, self.ssl)
 
         body = LOGIN_V1_BODY.format(username=self.username,
                                     password=self.password)
@@ -567,7 +594,7 @@ class Netgear(object):
                                          verify=False)
 
             success = _is_valid_response(response)
-            if not success:
+            if not success and not self._logging_in:
                 if _is_unauthorized_response(response):
                     _LOGGER.error("Unauthorized response, "
                                   "after seemingly successful re-login")
