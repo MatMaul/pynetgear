@@ -40,6 +40,7 @@ _illegal_xml_chars_RE = re.compile(u'[%s]' % u''.join(_illegal_ranges))
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
 DEFAULT_PORT = 5000
+ALL_PORTS = [(5555, True), (443, True), (5000, False), (80, False)]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -118,7 +119,7 @@ class Netgear(object):
         if self.login():
             return True
 
-        ports = [(5555, True), (443, True), (5000, False), (80, False)]
+        ports = ALL_PORTS.copy()
         if current_port in ports:
             ports.remove(current_port)
 
