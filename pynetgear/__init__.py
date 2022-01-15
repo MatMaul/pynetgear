@@ -105,7 +105,7 @@ class Netgear(object):
         self._info = None
 
     @property
-    def soap_url(self) -> str:
+    def soap_url(self):
         """SOAP url to connect to the router."""
         if self.url:
             return self.url + "/soap/server_sa/"
