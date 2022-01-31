@@ -580,8 +580,7 @@ class Netgear(object):
                 )
             except requests.exceptions.SSLError:
                 _LOGGER.debug("SSL error, thread as unauthorized response "
-                    "and try again after re-login"
-                )
+                              "and try again after re-login")
                 response = requests.Response()
                 response.status_code = 401
 
