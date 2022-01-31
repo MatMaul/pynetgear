@@ -574,10 +574,14 @@ class Netgear(object):
 
         try:
             try:
-                response = requests.post(self.soap_url, headers=headers,
-                                         data=message, timeout=30, verify=False)
+                response = requests.post(
+                    self.soap_url, headers=headers, data=message,
+                    timeout=30, verify=False
+                )
             except requests.exceptions.SSLError:
-                _LOGGER.debug("SSL error, thread as unauthorized response and try again after re-login")
+                _LOGGER.debug("SSL error, thread as unauthorized response "
+                    "and try again after re-login"
+                )
                 response = requests.Response()
                 response.status_code = 401
 
