@@ -607,6 +607,7 @@ class Netgear(object):
 
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error talking to API")
+            self.cookie = None
 
             # Maybe one day we will distinguish between
             # different errors..
