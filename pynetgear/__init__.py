@@ -573,8 +573,13 @@ class Netgear(object):
         message = SOAP_REQUEST.format(session_id=SESSION_ID, body=body)
 
         try:
-            response = requests.post(self.soap_url, headers=headers,
-                                     data=message, timeout=30, verify=False)
+            try:
+                response = requests.post(self.soap_url, headers=headers,
+                                         data=message, timeout=30, verify=False)
+            except requests.exceptions.SSLError:
+                _LOGGER.debug("SSL error, thread as unauthorized response and try again after re-login")
+                response = requests.Response()
+                response.status_code = 401
 
             if need_auth and _is_unauthorized_response(response):
                 # let's discard the cookie because it probably expired (v2)
