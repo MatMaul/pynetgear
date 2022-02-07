@@ -607,8 +607,7 @@ class Netgear(object):
                     _LOGGER.error("Unauthorized response, "
                                   "after seemingly successful re-login")
                 else:
-                    _LOGGER.error("Invalid response")
-                    _LOGGER.debug("%s\n%s\n%s", response.status_code,
+                    _LOGGER.error("Invalid response: %s\n%s\n%s", response.status_code,
                                   str(response.headers), response.text)
 
             return success, response
