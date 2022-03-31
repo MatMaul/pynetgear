@@ -545,6 +545,13 @@ class Netgear(object):
 
         return True
 
+    def _post_request(self, headers, message):
+        """Post the API request to the router."""
+        return requests.post(
+            self.soap_url, headers=headers, data=message,
+            timeout=30, verify=False
+        )
+
     def _make_request(
         self,
         service,
@@ -578,10 +585,7 @@ class Netgear(object):
 
         try:
             try:
-                response = requests.post(
-                    self.soap_url, headers=headers, data=message,
-                    timeout=30, verify=False
-                )
+                response = self._post_request(headers, message)
             except requests.exceptions.SSLError:
                 _LOGGER.debug("SSL error, thread as unauthorized response "
                               "and try again after re-login")
@@ -590,7 +594,7 @@ class Netgear(object):
 
             if need_auth and _is_unauthorized_response(response):
                 # let's discard the cookie because it probably expired (v2)
-                # or the IP-bound (?) session expired (v1)
+                # or the IP-bound session expired (v1)
                 self.cookie = None
 
                 _LOGGER.debug("Unauthorized response, "
@@ -601,15 +605,20 @@ class Netgear(object):
 
                 # reset headers with new cookie first and re-try
                 headers = self._get_headers(service, method, need_auth)
-                response = requests.post(self.soap_url, headers=headers,
-                                         data=message, timeout=30,
-                                         verify=False)
+                response = self._post_request(headers, message)
 
             success = _is_valid_response(response)
             if not success and not self._logging_in:
                 if _is_unauthorized_response(response):
                     _LOGGER.error("Unauthorized response, "
                                   "after seemingly successful re-login")
+                elif _is_service_unavailable_response(response):
+                    # try the request one more time
+                    response = self._post_request(headers, message)
+                    success = _is_valid_response(response)
+                    if not success:
+                        _LOGGER.error("503 Service Unavailable after retry, "
+                                      "the API may be overloaded.")
                 else:
                     _LOGGER.error("Invalid response: %s\n%s\n%s",
                                   response.status_code, str(response.headers),
@@ -700,6 +709,11 @@ def _is_valid_response(resp):
 def _is_unauthorized_response(resp):
     return (resp.status_code == 401 or
             "<ResponseCode>401</ResponseCode>" in resp.text)
+
+
+def _is_service_unavailable_response(resp):
+    return (resp.status_code == 503 or
+            "<ResponseCode>503</ResponseCode>" in resp.text)
 
 
 def _convert(value, to_type, default=None):
