@@ -487,7 +487,8 @@ class Netgear(object):
         _LOGGER.debug("Allow block device")
         if self.config_started:
             _LOGGER.error("Inconsistant configuration state, configuration already started")
-            return False
+            if not self.config_finish():
+                return False
 
         if not self.config_start():
             _LOGGER.error("Could not start configuration")
@@ -524,7 +525,8 @@ class Netgear(object):
         _LOGGER.debug("reboot")
         if self.config_started:
             _LOGGER.error("Inconsistant configuration state, configuration already started")
-            return False
+            if not self.config_finish():
+                return False
 
         if not self.config_start():
             _LOGGER.error("Could not start configuration")
@@ -538,6 +540,8 @@ class Netgear(object):
         if not success:
             _LOGGER.error("Could not successfully call reboot")
             return False
+
+        self.config_started = False
 
         return True
 
