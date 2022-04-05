@@ -415,13 +415,14 @@ class Netgear(object):
             def tofloats(lst): return (float(t) for t in lst)
             try:
                 text = text.replace(',', '')  # 25,350.10 MB
+                if "--" in text:
+                    return None
                 if "/" in text:  # "6.19/0.88" total/avg
                     return tuple(tofloats(text.split('/')))
-                elif ":" in text:  # 11:14 hr:mn
+                if ":" in text:  # 11:14 hr:mn
                     hour, mins = tofloats(text.split(':'))
                     return timedelta(hours=hour, minutes=mins)
-                else:
-                    return float(text)
+                return float(text)
             except ValueError:
                 _LOGGER.error("Error parsing traffic meter stats: %s", text)
                 return None
