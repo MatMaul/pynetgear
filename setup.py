@@ -2,7 +2,7 @@ from setuptools import setup
 from codecs import open
 
 REPO_URL = "http://github.com/MatMaul/pynetgear"
-VERSION = "0.9.3"
+VERSION = "0.9.4"
 
 with open("requirements.txt") as f:
     required = f.read().splitlines()
