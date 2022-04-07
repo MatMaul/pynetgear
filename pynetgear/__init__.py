@@ -667,11 +667,19 @@ def autodetect_url():
 
 def _find_node(text, xpath):
     text = _illegal_xml_chars_RE.sub('', text)
-    it = ET.iterparse(StringIO(text))
-    # strip all namespaces
-    for _, el in it:
-        if '}' in el.tag:
-            el.tag = el.tag.split('}', 1)[1]
+
+    try:
+        it = ET.iterparse(StringIO(text))
+        # strip all namespaces
+        for _, el in it:
+            if '}' in el.tag:
+                el.tag = el.tag.split('}', 1)[1]
+    except ET.ParseError:
+        _LOGGER.error("Error parsing XML response")
+        _LOGGER.debug("Error parsing XML response", exc_info=True)
+        _LOGGER.debug(text)
+        return False, None
+
     node = it.root.find(xpath)
     if node is None:
         _LOGGER.error("Error finding node in XML response")
