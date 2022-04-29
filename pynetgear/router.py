@@ -219,8 +219,11 @@ class Netgear(object):
         self.config_started = not success
         return success
 
-    def _get(self, service, method, parseNode, parse_text=lambda text: text):
+    def _get(self, service, method, parseNode=None, parse_text=lambda text: text):
         """Get information using a service and method from the router."""
+        if parseNode is None:
+            parseNode = f".//{method}Response",
+
         _LOGGER.debug("Call %s", method)
         success, response = self._make_request(
             service,
@@ -397,7 +400,6 @@ class Netgear(object):
         response = self._get(
             c.SERVICE_DEVICE_INFO,
             "GetInfo",
-            ".//GetInfoResponse"
         )
         if response is None:
             return None
@@ -574,7 +576,6 @@ class Netgear(object):
         return self._get(
             c.SERVICE_DEVICE_CONFIG,
             "GetTrafficMeterStatistics",
-            ".//GetTrafficMeterStatisticsResponse",
             parse_text = parse_text
         )
 
