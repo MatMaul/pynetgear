@@ -221,6 +221,7 @@ class Netgear(object):
 
     def _get(self, service, method, parseNode, parse_text=lambda text: text):
         """Get information using a service and method from the router."""
+        _LOGGER.debug("Call %s", method)
         success, response = self._make_request(
             service,
             method
@@ -241,6 +242,7 @@ class Netgear(object):
 
     def _set(self, service, method, params=None):
         """Set router parameters using a service, method and params."""
+        _LOGGER.debug("Call %s", method)
         if self.config_started:
             _LOGGER.error("Inconsistant configuration state, configuration already started")
             if not self.config_finish():
@@ -388,8 +390,6 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.debug("Get Info")
-
         if self._info is not None and use_cache:
             _LOGGER.debug("Info from cache.")
             return self._info
@@ -550,8 +550,6 @@ class Netgear(object):
 
         Returns None if error occurred.
         """
-        _LOGGER.debug("Get traffic meter")
-
         def parse_text(text):
             """
                 there are three kinds of values in the returned data
@@ -587,7 +585,6 @@ class Netgear(object):
         device_status you wish to set the device to: Allow (allow device to access the
         network) or Block (block the device from accessing the network).
         """
-        _LOGGER.debug("Allow block device")
         return self._set(
             c.SERVICE_DEVICE_CONFIG,
             "SetBlockDeviceByMAC",
@@ -598,5 +595,4 @@ class Netgear(object):
         )
 
     def reboot(self):
-        _LOGGER.debug("reboot")
         return self._set(c.SERVICE_DEVICE_CONFIG, c.REBOOT)
