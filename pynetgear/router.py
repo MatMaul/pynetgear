@@ -548,7 +548,22 @@ class Netgear(object):
 
     def get_traffic_meter(self):
         """
-        Return dict of traffic meter stats.
+        Return dict of traffic meter stats, like:
+        - NewTodayConnectionTime
+        - NewTodayUpload
+        - NewTodayDownload
+        - NewYesterdayConnectionTime
+        - NewYesterdayUpload
+        - NewYesterdayDownload
+        - NewWeekConnectionTime
+        - NewWeekUpload
+        - NewWeekDownload
+        - NewMonthConnectionTime
+        - NewMonthUpload
+        - NewMonthDownload
+        - NewLastMonthConnectionTime
+        - NewLastMonthUpload
+        - NewLastMonthDownload
 
         Returns None if error occurred.
         """
