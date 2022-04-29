@@ -84,6 +84,188 @@ class Netgear(object):
         return "{}://{}:{}/soap/server_sa/".format(
             scheme, self.host, self.port)
 
+    def _get_headers(self, service, method, need_auth=True):
+        headers = h.get_soap_headers(service, method)
+        # if the stored cookie is not a str then we are
+        # probably using the old login method
+        if need_auth and isinstance(self.cookie, str):
+            headers["Cookie"] = self.cookie
+        return headers
+
+    def _post_request(self, headers, message):
+        """Post the API request to the router."""
+        return requests.post(
+            self.soap_url, headers=headers, data=message,
+            timeout=30, verify=False
+        )
+
+    def _make_request(
+        self,
+        service,
+        method,
+        params=None,
+        body="",
+        need_auth=True
+    ):
+        """Make an API request to the router."""
+        # If we have no cookie (v2) or never called login before (v1)
+        # and we need auth, the request will fail for sure.
+        if need_auth and not self.cookie:
+            if not self.login():
+                return False, None
+
+        headers = self._get_headers(service, method, need_auth)
+
+        if not body:
+            if not params:
+                params = ""
+            if isinstance(params, dict):
+                _map = params
+                params = ""
+                for k in _map:
+                    params += "<" + k + ">" + _map[k] + "</" + k + ">\n"
+
+            body = c.CALL_BODY.format(service=c.SERVICE_PREFIX + service,
+                                    method=method, params=params)
+
+        message = c.SOAP_REQUEST.format(session_id=c.SESSION_ID, body=body)
+
+        try:
+            try:
+                response = self._post_request(headers, message)
+            except requests.exceptions.SSLError:
+                _LOGGER.debug("SSL error, thread as unauthorized response "
+                              "and try again after re-login")
+                response = requests.Response()
+                response.status_code = 401
+
+            if need_auth and h.is_unauthorized_response(response):
+                # let's discard the cookie because it probably expired (v2)
+                # or the IP-bound session expired (v1)
+                self.cookie = None
+
+                _LOGGER.debug("Unauthorized response, "
+                              "let's login and retry...")
+                if not self.login():
+                    _LOGGER.error("Unauthorized response, re-login failed")
+                    return False, response
+
+                # reset headers with new cookie first and re-try
+                headers = self._get_headers(service, method, need_auth)
+                response = self._post_request(headers, message)
+
+            success = h.is_valid_response(response)
+            if not success and not self._logging_in:
+                if h.is_unauthorized_response(response):
+                    _LOGGER.error("Unauthorized response, "
+                                  "after seemingly successful re-login")
+                elif h.is_service_unavailable_response(response):
+                    # try the request one more time
+                    response = self._post_request(headers, message)
+                    success = h.is_valid_response(response)
+                    if not success:
+                        _LOGGER.error("503 Service Unavailable after retry, "
+                                      "the API may be overloaded.")
+                else:
+                    _LOGGER.error("Invalid response: %s\n%s\n%s",
+                                  response.status_code, str(response.headers),
+                                  response.text)
+
+            return success, response
+
+        except requests.exceptions.RequestException:
+            _LOGGER.exception("Error talking to API")
+            self.cookie = None
+
+            # Maybe one day we will distinguish between
+            # different errors..
+            return False, None
+
+    def config_start(self):
+        """
+        Start a configuration session.
+        For managing router admin functionality (ie allowing/blocking devices)
+        """
+        _LOGGER.debug("Config start")
+
+        success, _ = self._make_request(
+            c.SERVICE_DEVICE_CONFIG,
+            c.CONFIGURATION_STARTED,
+            {
+                "NewSessionID": c.SESSION_ID
+            }
+        )
+
+        self.config_started = success
+        return success
+
+    def config_finish(self):
+        """
+        End of a configuration session.
+        Tells the router we're done managing admin functionality.
+        """
+        _LOGGER.debug("Config finish")
+        if not self.config_started:
+            return True
+
+        success, _ = self._make_request(
+            c.SERVICE_DEVICE_CONFIG,
+            c.CONFIGURATION_FINISHED,
+            {
+                "NewStatus": "ChangesApplied"
+            }
+        )
+
+        self.config_started = not success
+        return success
+
+    def _get(self, service, method, parseNode, parse_text=lambda text: text):
+        """Get information using a service and method from the router."""
+        success, response = self._make_request(
+            service,
+            method
+        )
+        if not success:
+            _LOGGER.debug("Could not successfully get %s", method)
+            return None
+
+        success, node = h.find_node(
+            response.text,
+            parseNode
+        )
+        if not success:
+            _LOGGER.debug("Could not parse response for %s", method)
+            return None
+
+        return {t.tag: parse_text(t.text) for t in node}
+
+    def _set(self, service, method, params=None):
+        """Set router parameters using a service, method and params."""
+        if self.config_started:
+            _LOGGER.error("Inconsistant configuration state, configuration already started")
+            if not self.config_finish():
+                return False
+
+        if not self.config_start():
+            _LOGGER.error("Could not start configuration")
+            return False
+
+        success, _ = self._make_request(service, method, params)
+
+        if not success:
+            _LOGGER.error("Could not successfully call '%s' with params '%s'", method, params)
+            return False
+
+        if method == c.REBOOT:
+            self.config_started = False
+            return True
+
+        if not self.config_finish():
+            _LOGGER.error("Inconsistant configuration state, configuration already finished")
+            return False
+
+        return True
+
     def login_try_port(self):
         # first try the currently configured port-ssl combination
         current_port = (self.port, self.ssl)
@@ -212,21 +394,15 @@ class Netgear(object):
             _LOGGER.debug("Info from cache.")
             return self._info
 
-        success, response = self._make_request(
+        response = self._get(
             c.SERVICE_DEVICE_INFO,
-            "GetInfo"
+            "GetInfo",
+            ".//GetInfoResponse"
         )
-        if not success:
+        if response is None:
             return None
 
-        success, node = h.find_node(
-            response.text,
-            ".//GetInfoResponse")
-        if not success:
-            return None
-
-        self._info = {t.tag: t.text for t in node}
-
+        self._info = response
         return self._info
 
     def get_attached_devices(self):
@@ -397,58 +573,12 @@ class Netgear(object):
                 _LOGGER.error("Error parsing traffic meter stats: %s", text)
                 return None
 
-        success, response = self._make_request(
+        return self._get(
             c.SERVICE_DEVICE_CONFIG,
-            "GetTrafficMeterStatistics"
+            "GetTrafficMeterStatistics",
+            ".//GetTrafficMeterStatisticsResponse",
+            parse_text = parse_text
         )
-        if not success:
-            return None
-
-        success, node = h.find_node(
-            response.text,
-            ".//GetTrafficMeterStatisticsResponse")
-        if not success:
-            return None
-
-        return {t.tag: parse_text(t.text) for t in node}
-
-    def config_start(self):
-        """
-        Start a configuration session.
-        For managing router admin functionality (ie allowing/blocking devices)
-        """
-        _LOGGER.debug("Config start")
-
-        success, _ = self._make_request(
-            c.SERVICE_DEVICE_CONFIG,
-            c.CONFIGURATION_STARTED,
-            {
-                "NewSessionID": c.SESSION_ID
-            }
-        )
-
-        self.config_started = success
-        return success
-
-    def config_finish(self):
-        """
-        End of a configuration session.
-        Tells the router we're done managing admin functionality.
-        """
-        _LOGGER.debug("Config finish")
-        if not self.config_started:
-            return True
-
-        success, _ = self._make_request(
-            c.SERVICE_DEVICE_CONFIG,
-            c.CONFIGURATION_FINISHED,
-            {
-                "NewStatus": "ChangesApplied"
-            }
-        )
-
-        self.config_started = not success
-        return success
 
     def allow_block_device(self, mac_addr, device_status=c.BLOCK):
         """
@@ -458,16 +588,7 @@ class Netgear(object):
         network) or Block (block the device from accessing the network).
         """
         _LOGGER.debug("Allow block device")
-        if self.config_started:
-            _LOGGER.error("Inconsistant configuration state, configuration already started")
-            if not self.config_finish():
-                return False
-
-        if not self.config_start():
-            _LOGGER.error("Could not start configuration")
-            return False
-
-        success, _ = self._make_request(
+        return self._set(
             c.SERVICE_DEVICE_CONFIG,
             "SetBlockDeviceByMAC",
             {
@@ -476,133 +597,6 @@ class Netgear(object):
             }
         )
 
-        if not success:
-            _LOGGER.error("Could not successfully call allow/block device")
-            return False
-
-        if not self.config_finish():
-            _LOGGER.error("Inconsistant configuration state, configuration already finished")
-            return False
-
-        return True
-
-    def _get_headers(self, service, method, need_auth=True):
-        headers = h.get_soap_headers(service, method)
-        # if the stored cookie is not a str then we are
-        # probably using the old login method
-        if need_auth and isinstance(self.cookie, str):
-            headers["Cookie"] = self.cookie
-        return headers
-
     def reboot(self):
         _LOGGER.debug("reboot")
-        if self.config_started:
-            _LOGGER.error("Inconsistant configuration state, configuration already started")
-            if not self.config_finish():
-                return False
-
-        if not self.config_start():
-            _LOGGER.error("Could not start configuration")
-            return False
-
-        success, _ = self._make_request(
-            c.SERVICE_DEVICE_CONFIG,
-            c.REBOOT,
-            )
-
-        if not success:
-            _LOGGER.error("Could not successfully call reboot")
-            return False
-
-        self.config_started = False
-
-        return True
-
-    def _post_request(self, headers, message):
-        """Post the API request to the router."""
-        return requests.post(
-            self.soap_url, headers=headers, data=message,
-            timeout=30, verify=False
-        )
-
-    def _make_request(
-        self,
-        service,
-        method,
-        params=None,
-        body="",
-        need_auth=True
-    ):
-        """Make an API request to the router."""
-        # If we have no cookie (v2) or never called login before (v1)
-        # and we need auth, the request will fail for sure.
-        if need_auth and not self.cookie:
-            if not self.login():
-                return False, None
-
-        headers = self._get_headers(service, method, need_auth)
-
-        if not body:
-            if not params:
-                params = ""
-            if isinstance(params, dict):
-                _map = params
-                params = ""
-                for k in _map:
-                    params += "<" + k + ">" + _map[k] + "</" + k + ">\n"
-
-            body = c.CALL_BODY.format(service=c.SERVICE_PREFIX + service,
-                                    method=method, params=params)
-
-        message = c.SOAP_REQUEST.format(session_id=c.SESSION_ID, body=body)
-
-        try:
-            try:
-                response = self._post_request(headers, message)
-            except requests.exceptions.SSLError:
-                _LOGGER.debug("SSL error, thread as unauthorized response "
-                              "and try again after re-login")
-                response = requests.Response()
-                response.status_code = 401
-
-            if need_auth and h.is_unauthorized_response(response):
-                # let's discard the cookie because it probably expired (v2)
-                # or the IP-bound session expired (v1)
-                self.cookie = None
-
-                _LOGGER.debug("Unauthorized response, "
-                              "let's login and retry...")
-                if not self.login():
-                    _LOGGER.error("Unauthorized response, re-login failed")
-                    return False, response
-
-                # reset headers with new cookie first and re-try
-                headers = self._get_headers(service, method, need_auth)
-                response = self._post_request(headers, message)
-
-            success = h.is_valid_response(response)
-            if not success and not self._logging_in:
-                if h.is_unauthorized_response(response):
-                    _LOGGER.error("Unauthorized response, "
-                                  "after seemingly successful re-login")
-                elif h.is_service_unavailable_response(response):
-                    # try the request one more time
-                    response = self._post_request(headers, message)
-                    success = h.is_valid_response(response)
-                    if not success:
-                        _LOGGER.error("503 Service Unavailable after retry, "
-                                      "the API may be overloaded.")
-                else:
-                    _LOGGER.error("Invalid response: %s\n%s\n%s",
-                                  response.status_code, str(response.headers),
-                                  response.text)
-
-            return success, response
-
-        except requests.exceptions.RequestException:
-            _LOGGER.exception("Error talking to API")
-            self.cookie = None
-
-            # Maybe one day we will distinguish between
-            # different errors..
-            return False, None
+        return self._set(c.SERVICE_DEVICE_CONFIG, c.REBOOT)
