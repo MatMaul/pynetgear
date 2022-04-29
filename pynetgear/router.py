@@ -611,4 +611,423 @@ class Netgear(object):
         )
 
     def reboot(self):
+        """Reboot the router"""
         return self._set(c.SERVICE_DEVICE_CONFIG, c.REBOOT)
+
+    def check_new_firmware(self):
+        """
+        Check for new firmware and return dict like:
+        - CurrentVersion
+        - NewVersion
+        - ReleaseNote
+        """
+        return self._get(
+            c.SERVICE_DEVICE_CONFIG,
+            c.CHECK_NEW_FIRMWARE,
+        )
+
+    def get_device_config_info(self):
+        """
+        Get Device Config Info and return dict like:
+        - BlankState
+        - NewBlockSiteEnable
+        - NewBlockSiteName
+        - NewTimeZone
+        - NewDaylightSaving
+        """
+        return self._get(
+            c.SERVICE_DEVICE_CONFIG,
+            c.GET_DEVICE_CONFIG_INFO,
+        )
+
+    def get_block_device_enable_status(self):
+        """
+        Get Block Device Enable Status and return dict like:
+        - NewBlockDeviceEnable
+        """
+        return self._get(
+            c.SERVICE_DEVICE_CONFIG,
+            c.GET_BLOCK_DEVICE_ENABLE_STATUS
+        )
+
+    def set_block_device_enable(self, value=False):
+        """Set SetBlockDeviceEnable."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_DEVICE_CONFIG,
+            c.SET_BLOCK_DEVICE_ENABLE,
+            {"NewBlockDeviceEnable": value},
+        )
+
+    def get_traffic_meter_enabled(self):
+        """
+        Get Traffic Meter Enabled and return dict like:
+        - NewTrafficMeterEnable
+        """
+        return self._get(
+            c.SERVICE_DEVICE_CONFIG,
+            c.GET_TRAFFIC_METER_ENABLED, parseNode
+        )
+
+    def get_traffic_meter_options(self):
+        """
+        Get Traffic Meter Options and return dict like:
+        - NewControlOption
+        - NewMonthlyLimit
+        - RestartHour
+        - RestartMinute
+        - RestartDay
+        """
+        return self._get(
+            c.SERVICE_DEVICE_CONFIG,
+            c.GET_TRAFFIC_METER_OPTIONS
+        )
+
+    def enable_traffic_meter(self, value=False):
+        """Set EnableTrafficMeter."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_DEVICE_CONFIG,
+            c.ENABLE_TRAFFIC_METER,
+            {"NewTrafficMeterEnable": value},
+        )
+
+    def get_lan_config_sec_info(self):
+        """
+        Get LAN Config Security Info and return dict like:
+        - NewLANSubnet
+        - NewWANLAN_Subnet_Match
+        - NewLANMACAddress
+        - NewLANIP
+        - NewDHCPEnabled
+        """
+        return self._get(
+            c.SERVICE_LAN_CONFIG_SECURITY,
+            c.GET_LAN_CONFIG_SEC_INFO,
+        )
+
+    def get_wan_ip_con_info(self):
+        """
+        Get WAN IP Connection Info and return dict like:
+        - NewEnable
+        - NewConnectionType
+        - NewExternalIPAddress
+        - NewSubnetMask
+        - NewAddressingType
+        - NewDefaultGateway
+        - NewMACAddress
+        - NewMACAddressOverride
+        - NewMaxMTUSize
+        - NewDNSEnabled
+        - NewDNSServers
+        """
+        return self._get(
+            c.SERVICE_WAN_IP_CONNECTION,
+            c.GET_WAN_IP_CON_INFO,
+        )
+
+    def get_parental_control_enable_status(self):
+        """
+        Get parental control enable status and return dict like:
+        - ParentalControl
+        """
+        return self._get(
+            c.SERVICE_PARENTAL_CONTROL,
+            c.GET_PARENTAL_CONTROL_ENABLE_STATUS
+        )
+
+    def enable_parental_control(self, value=False):
+        """Set EnableParentalControl."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_PARENTAL_CONTROL,
+            c.ENABLE_PARENTAL_CONTROL,
+            {"NewEnable": value},
+        )
+
+    def get_all_mac_addresses(self):
+        """
+        Get All MAC Addresses for parental control and return dict like:
+        - AllMACAddresses
+        """
+        return self._get(
+            c.SERVICE_PARENTAL_CONTROL,
+            c.GET_ALL_MAC_ADDRESSES,
+        )
+
+    def get_dns_masq_device_id(self):
+        """
+        Get DNS Masq Device ID and return dict like:
+        - NewDeviceID
+        """
+        return self._get(
+            c.SERVICE_PARENTAL_CONTROL,
+            c.GET_DNS_MASQ_DEVICE_ID,
+        )
+
+    def get_support_feature_list(self):
+        """
+        Get Support Feature List and return dict like:
+        - DynamicQoS
+        - OpenDNSParentalControl
+        - MaxMonthlyTrafficLimitation
+        - AccessControl
+        - SpeedTest
+        - GuestNetworkSchedule
+        - TCAcceptance
+        - SmartConnect
+        - AttachedDevice
+        - NameNTGRDevice
+        - PasswordReset
+        """
+        return self._get(
+            c.SERVICE_DEVICE_INFO,
+            c.GET_SUPPORT_FEATURE_LIST_XML,
+            parseNode = f".//{c.GET_SUPPORT_FEATURE_LIST_XML}Response/newFeatureList/features",
+        )
+
+    def set_speed_test_start(self):
+        """Start the speed test."""
+        return self._set(
+            c.SERVICE_ADVANCED_QOS,
+            c.SET_SPEED_TEST_START,
+        )
+
+    def get_speed_test_result(self):
+        """
+        Get the speed test result and return dict like:
+        - NewOOKLAUplinkBandwidth
+        - NewOOKLADownlinkBandwidth
+        - AveragePing
+        
+        Response Code = 1 means in progress
+        """
+        return self._get(
+            c.SERVICE_ADVANCED_QOS,
+            c.GET_SPEED_TEST_RESULT,
+        )
+
+    def get_qos_enable_status(self):
+        """
+        Get QoS Enable Status and return dict like:
+        - NewQoSEnableStatus
+        """
+        return self._get(
+            c.SERVICE_ADVANCED_QOS,
+            c.GET_QOS_ENABLE_STATUS,
+        )
+
+    def set_qos_enable_status(self, value=False):
+        """Set QoS Enable Status."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_ADVANCED_QOS,
+            c.SET_QOS_ENABLE_STATUS,
+            {"NewQoSEnable": value},
+        )
+
+    def get_bandwidth_control_options(self):
+        """
+        Get Bandwidth Control Options and return dict like:
+        - NewUplinkBandwidth
+        - NewDownlinkBandwidth
+        - NewSettingMethod
+        """
+        return self._get(
+            c.SERVICE_ADVANCED_QOS,
+            c.GET_BANDWIDTH_CONTROL_OPTIONS,
+        )
+
+    def get_guest_access_enabled(self):
+        """
+        Get Guest Access Enabled and return dict like:
+        - NewGuestAccessEnabled
+        """
+        response = self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_GUEST_ACCESS_ENABLED,
+        )
+
+        if response is None:
+            response = self._get(
+                c.SERVICE_WLAN_CONFIGURATION,
+                c.GET_GUEST_ACCESS_ENABLED_2
+            )
+
+        return response
+
+    def get_5g_guest_access_enabled(self):
+        """
+        Get 5G Guest Access Enabled and return dict like:
+        - NewGuestAccessEnabled
+        """
+        response = self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_5G1_GUEST_ACCESS_ENABLED
+        )
+
+        if resonse is None:
+            response = self._get(
+                c.SERVICE_WLAN_CONFIGURATION,
+                c.GET_5G1_GUEST_ACCESS_ENABLED_2
+            )
+
+        if resonse is None:
+            response = self._get(
+                c.SERVICE_WLAN_CONFIGURATION,
+                c.GET_5G_GUEST_ACCESS_ENABLED_2
+            )
+
+        return response
+
+    def set_guest_access_enabled(self, value=False):
+        """Set Guest Access Enabled."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_GUEST_ACCESS_ENABLED,
+            {"NewGuestAccessEnabled": value},
+        )
+
+    def set_guest_access_enabled_2(self, value=False):
+        """Set Guest Access Enabled 2."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_GUEST_ACCESS_ENABLED_2,
+            {"NewGuestAccessEnabled": value},
+        )
+
+    def set_5g_guest_access_enabled(self, value=False):
+        """Set 5G Guest Access Enabled."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_5G_GUEST_ACCESS_ENABLED,
+            {"NewGuestAccessEnabled": value},
+        )
+
+    def set_5g_guest_access_enabled_2(self, value=False):
+        """Set 5G Guest Access Enabled 2."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_5G_GUEST_ACCESS_ENABLED_2,
+            {"NewGuestAccessEnabled": value},
+        )
+
+    def set_5g_guest_access_enabled_3(self, value=False):
+        """Set 5G Guest Access Enabled 3."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_5G1_GUEST_ACCESS_ENABLED_2,
+            {"NewGuestAccessEnabled": value},
+        )
+
+    def get_wpa_security_keys(self):
+        """
+        Get WPA Security Keys and return dict like:
+        - NewWPAPassphrase
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_WPA_SECURITY_KEYS,
+        )
+
+    def get_5g_wpa_security_keys(self):
+        """
+        Get 5G WPA Security Keys and return dict like:
+        - NewWPAPassphrase
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_5G_WPA_SECURITY_KEYS,
+        )
+
+    def get_5g_info(self):
+        """
+        Get 5G Info and return dict like:
+        - NewEnable
+        - NewSSIDBroadcast
+        - NewStatus
+        - NewSSID
+        - NewRegion
+        - NewChannel
+        - NewWirelessMode
+        - NewBasicEncryptionModes
+        - NewWEPAuthType
+        - NewWPAEncryptionModes
+        - NewWLANMACAddress
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_5G_INFO,
+        )
+
+    def get_2g_info(self):
+        """
+        Get 2G Info and return dict like:
+        - NewEnable
+        - NewSSIDBroadcast
+        - NewStatus
+        - NewSSID
+        - NewRegion
+        - NewChannel
+        - NewWirelessMode
+        - NewBasicEncryptionModes
+        - NewWEPAuthType
+        - NewWPAEncryptionModes
+        - NewWLANMACAddress
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_2G_INFO,
+        )
+
+    def get_guest_access_network_info(self):
+        """
+        Get Guest Access Network Info and return dict like:
+        - NewSSID
+        - NewSecurityMode
+        - NewKey
+        - UserSetSchedule
+        - Schedule
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_GUEST_ACCESS_NETWORK_INFO,
+        )
+
+    def get_5g_guest_access_network_info(self):
+        """
+        Get 5G Guest Access Network Info and return dict like:
+        - NewSSID
+        - NewSecurityMode
+        - NewKey
+        - UserSetSchedule
+        - Schedule
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_5G_GUEST_ACCESS_NETWORK_INFO
+        )
+
+    def get_smart_connect_enabled(self):
+        """
+        Get Smart Connect Enabled and return dict like:
+        - NewSmartConnectEnable
+        """
+        return self._get(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.GET_SMART_CONNECT_ENABLED,
+        )
+
+    def set_smart_connect_enabled(self, value=False):
+        """Set Smart Connect Enable."""
+        value = h.value_to_zero_or_one(value)
+        return self._set(
+            c.SERVICE_WLAN_CONFIGURATION,
+            c.SET_SMART_CONNECT_ENABLED,
+            {"NewSmartConnectEnable": value},
+        )
