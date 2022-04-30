@@ -128,9 +128,11 @@ def is_service_unavailable_response(resp):
     return (resp.status_code == 503 or
             "<ResponseCode>503</ResponseCode>" in resp.text)
 
+
 def is_service_not_found_response(resp):
     return (resp.status_code == 404 or
             "<ResponseCode>404</ResponseCode>" in resp.text)
+
 
 def convert(value, to_type, default=None):
     """Convert value to to_type, returns default if fails."""
@@ -155,6 +157,7 @@ def value_to_zero_or_one(s):
 
     raise ValueError("Cannot covert {} to a 1 or 0".format(s))
 
+
 def zero_or_one_to_boolean(s):
     """Convert 1 or 0 string to boolean."""
     if isinstance(s, str):
@@ -167,10 +170,11 @@ def zero_or_one_to_boolean(s):
 
     raise ValueError("Cannot covert {} to a boolean".format(s))
 
+
 def zero_or_one_dict_to_boolean(d):
     """Convert a dict of one key with a 1 or 0 string to boolean."""
     if isinstance(d, dict):
         if len(d) == 1:
             return zero_or_one_to_boolean(d.popitem()[1])
 
-    raise ValueError("Cannot covert {} to a boolean".format(s))
+    raise ValueError("Cannot covert {} to a boolean".format(d))
