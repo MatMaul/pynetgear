@@ -907,7 +907,7 @@ class Netgear(object):
                 )
                 return None
 
-            success, node = h.find_node(response.text, f".//ResponseCode")
+            success, node = h.find_node(response.text, ".//ResponseCode")
             if not success:
                 _LOGGER.debug("Could not parse response for speed test result")
                 return None
