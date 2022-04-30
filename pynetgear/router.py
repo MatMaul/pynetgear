@@ -102,7 +102,9 @@ class Netgear(object):
             return self.url + "/soap/server_sa/"
 
         scheme = "https" if self.ssl else "http"
-        return "{}://{}:{}/soap/server_sa/".format(scheme, self.host, self.port)
+        return "{}://{}:{}/soap/server_sa/".format(
+            scheme, self.host, self.port
+        )
 
     def _get_headers(self, service, method, need_auth=True):
         headers = h.get_soap_headers(service, method)
@@ -115,7 +117,11 @@ class Netgear(object):
     def _post_request(self, headers, message):
         """Post the API request to the router."""
         return requests.post(
-            self.soap_url, headers=headers, data=message, timeout=30, verify=False
+            self.soap_url,
+            headers=headers,
+            data=message,
+            timeout=30,
+            verify=False,
         )
 
     def _make_request(
@@ -146,7 +152,9 @@ class Netgear(object):
                     params += "<" + k + ">" + _map[k] + "</" + k + ">\n"
 
             body = c.CALL_BODY.format(
-                service=c.SERVICE_PREFIX + service, method=method, params=params
+                service=c.SERVICE_PREFIX + service,
+                method=method,
+                params=params,
             )
 
         message = c.SOAP_REQUEST.format(session_id=c.SESSION_ID, body=body)
@@ -167,7 +175,9 @@ class Netgear(object):
                 # or the IP-bound session expired (v1)
                 self.cookie = None
 
-                _LOGGER.debug("Unauthorized response, " "let's login and retry...")
+                _LOGGER.debug(
+                    "Unauthorized response, " "let's login and retry..."
+                )
                 if not self.login():
                     _LOGGER.error("Unauthorized response, re-login failed")
                     return False, response
@@ -180,7 +190,8 @@ class Netgear(object):
             if not success and not self._logging_in:
                 if h.is_unauthorized_response(response):
                     _LOGGER.error(
-                        "Unauthorized response, " "after seemingly successful re-login"
+                        "Unauthorized response, "
+                        "after seemingly successful re-login"
                     )
                 elif h.is_service_unavailable_response(response):
                     sleep(3)
@@ -194,7 +205,9 @@ class Netgear(object):
                         )
                 elif h.is_service_not_found_response(response) and check:
                     _LOGGER.error(
-                        "404 service '%s', method '%s' not found", service, method
+                        "404 service '%s', method '%s' not found",
+                        service,
+                        method,
                     )
                 elif check:
                     _LOGGER.error(
@@ -249,7 +262,12 @@ class Netgear(object):
         return success
 
     def _get(
-        self, service, method, parseNode=None, parse_text=lambda text: text, check=True
+        self,
+        service,
+        method,
+        parseNode=None,
+        parse_text=lambda text: text,
+        check=True,
     ):
         """Get information using a service and method from the router."""
         if parseNode is None:
@@ -290,7 +308,9 @@ class Netgear(object):
 
         if not success:
             _LOGGER.error(
-                "Could not successfully call '%s' with params '%s'", method, params
+                "Could not successfully call '%s' with params '%s'",
+                method,
+                params,
             )
             return False
 
@@ -322,7 +342,9 @@ class Netgear(object):
 
         return response
 
-    def _set_methods(self, service, method_list, params, get_function, expected):
+    def _set_methods(
+        self, service, method_list, params, get_function, expected
+    ):
         for idx in range(len(method_list)):
             method = method_list[idx]
             response = self._set(
@@ -355,7 +377,8 @@ class Netgear(object):
             self.ssl = port[1]
             if self.login():
                 _LOGGER.info(
-                    "Login succeeded using non default port " "'%i' and ssl '%r'.",
+                    "Login succeeded using non default port "
+                    "'%i' and ssl '%r'.",
                     self.port,
                     self.ssl,
                 )
@@ -429,7 +452,9 @@ class Netgear(object):
     def login_v1(self):
         _LOGGER.debug("Login v1, port '%i', ssl, '%r'", self.port, self.ssl)
 
-        body = c.LOGIN_V1_BODY.format(username=self.username, password=self.password)
+        body = c.LOGIN_V1_BODY.format(
+            username=self.username, password=self.password
+        )
 
         success, _ = self._make_request(
             c.SERVICE_PARENTAL_CONTROL, c.LOGIN_OLD, None, body, False
@@ -513,7 +538,9 @@ class Netgear(object):
 
         if entry_count is not None and entry_count != len(entries):
             _LOGGER.info(
-                "Number of devices should be: %d but is: %d", entry_count, len(entries)
+                "Number of devices should be: %d but is: %d",
+                entry_count,
+                len(entries),
             )
 
         for entry in entries:
@@ -666,7 +693,9 @@ class Netgear(object):
                 return None
 
         return self._get(
-            c.SERVICE_DEVICE_CONFIG, "GetTrafficMeterStatistics", parse_text=parse_text
+            c.SERVICE_DEVICE_CONFIG,
+            "GetTrafficMeterStatistics",
+            parse_text=parse_text,
         )
 
     def allow_block_device(self, mac_addr, device_status=c.BLOCK):
@@ -714,7 +743,9 @@ class Netgear(object):
 
     def get_block_device_enable_status(self):
         """Get Block Device Enable Status and return boolean."""
-        response = self._get(c.SERVICE_DEVICE_CONFIG, c.GET_BLOCK_DEVICE_ENABLE_STATUS)
+        response = self._get(
+            c.SERVICE_DEVICE_CONFIG, c.GET_BLOCK_DEVICE_ENABLE_STATUS
+        )
         return h.zero_or_one_dict_to_boolean(response)
 
     def set_block_device_enable(self, value=False):
@@ -728,7 +759,9 @@ class Netgear(object):
 
     def get_traffic_meter_enabled(self):
         """Get Traffic Meter Enabled and return boolean."""
-        response = self._get(c.SERVICE_DEVICE_CONFIG, c.GET_TRAFFIC_METER_ENABLED)
+        response = self._get(
+            c.SERVICE_DEVICE_CONFIG, c.GET_TRAFFIC_METER_ENABLED
+        )
         return h.zero_or_one_dict_to_boolean(response)
 
     def get_traffic_meter_options(self):
@@ -866,7 +899,9 @@ class Netgear(object):
                 check=False,
             )
             if response.status_code != 200:
-                _LOGGER.debug("Could not successfully get %s", c.GET_SPEED_TEST_RESULT)
+                _LOGGER.debug(
+                    "Could not successfully get %s", c.GET_SPEED_TEST_RESULT
+                )
                 return None
 
             success, node = h.find_node(response.text, f".//ResponseCode")
@@ -882,7 +917,9 @@ class Netgear(object):
             if node.text == "501":  # old test result
                 _LOGGER.warning("old speed test result returned")
                 break
-            _LOGGER.error("Unexpected return code for speed test: '%s'", node.text)
+            _LOGGER.error(
+                "Unexpected return code for speed test: '%s'", node.text
+            )
             return None
 
         success, node = h.find_node(
