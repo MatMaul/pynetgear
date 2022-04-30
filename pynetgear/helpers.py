@@ -141,24 +141,18 @@ def is_valid_response(resp):
 
 
 def is_unauthorized_response(resp):
-    return (
-        resp.status_code == 401
-        or "<ResponseCode>401</ResponseCode>" in resp.text
-    )
+    return (resp.status_code == 401 or
+            "<ResponseCode>401</ResponseCode>" in resp.text)
 
 
 def is_service_unavailable_response(resp):
-    return (
-        resp.status_code == 503
-        or "<ResponseCode>503</ResponseCode>" in resp.text
-    )
+    return (resp.status_code == 503 or
+            "<ResponseCode>503</ResponseCode>" in resp.text)
 
 
 def is_service_not_found_response(resp):
-    return (
-        resp.status_code == 404
-        or "<ResponseCode>404</ResponseCode>" in resp.text
-    )
+    return (resp.status_code == 404 or
+            "<ResponseCode>404</ResponseCode>" in resp.text)
 
 
 def convert(value, to_type, default=None):

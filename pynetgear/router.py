@@ -103,8 +103,7 @@ class Netgear(object):
 
         scheme = "https" if self.ssl else "http"
         return "{}://{}:{}/soap/server_sa/".format(
-            scheme, self.host, self.port
-        )
+            scheme, self.host, self.port)
 
     def _get_headers(self, service, method, need_auth=True):
         headers = h.get_soap_headers(service, method)
@@ -873,7 +872,7 @@ class Netgear(object):
         return self._get(
             c.SERVICE_DEVICE_INFO,
             c.GET_SUPPORT_FEATURE_LIST_XML,
-            parseNode= (
+            parseNode=(
                 f".//{c.GET_SUPPORT_FEATURE_LIST_XML}Response/"
                 "newFeatureList/features"
             ),
