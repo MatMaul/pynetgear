@@ -270,7 +270,7 @@ class Netgear(object):
     ):
         """Get information using a service and method from the router."""
         if parseNode is None:
-            parseNode = f".//{method}Response"
+            parseNode = ".//{%s}Response" % (method)
 
         _LOGGER.debug("Call %s", method)
         success, response = self._make_request(
@@ -873,7 +873,7 @@ class Netgear(object):
             c.SERVICE_DEVICE_INFO,
             c.GET_SUPPORT_FEATURE_LIST_XML,
             parseNode=(
-                f".//{c.GET_SUPPORT_FEATURE_LIST_XML}Response/"
+                ".//{%s}Response/" % (c.GET_SUPPORT_FEATURE_LIST_XML)
                 "newFeatureList/features"
             ),
         )
@@ -926,7 +926,7 @@ class Netgear(object):
             return None
 
         success, node = h.find_node(
-            response.text, f".//{c.GET_SPEED_TEST_RESULT}Response"
+            response.text, ".//{%s}Response" % (c.GET_SPEED_TEST_RESULT)
         )
         if not success:
             _LOGGER.debug("Could not parse response for speed test result")
