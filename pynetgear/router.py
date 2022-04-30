@@ -4,6 +4,7 @@ from __future__ import print_function
 from collections import namedtuple
 import logging
 from datetime import timedelta
+from time import sleep
 
 import requests
 from urllib3 import disable_warnings
@@ -160,6 +161,7 @@ class Netgear(object):
                     _LOGGER.error("Unauthorized response, "
                                   "after seemingly successful re-login")
                 elif h.is_service_unavailable_response(response):
+                    sleep(3)
                     # try the request one more time
                     response = self._post_request(headers, message)
                     success = h.is_valid_response(response)
