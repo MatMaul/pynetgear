@@ -111,6 +111,7 @@ def is_valid_response(resp):
     return (resp.status_code == 200 and
             ("<ResponseCode>0000</" in resp.text or
              "<ResponseCode>000</" in resp.text or
+             "<ResponseCode>0</" in resp.text or
              # Speed Test Result
              "<ResponseCode>2</" in resp.text or
              # dns_masq/mac_address
@@ -127,6 +128,9 @@ def is_service_unavailable_response(resp):
     return (resp.status_code == 503 or
             "<ResponseCode>503</ResponseCode>" in resp.text)
 
+def is_service_not_found_response(resp):
+    return (resp.status_code == 404 or
+            "<ResponseCode>404</ResponseCode>" in resp.text)
 
 def convert(value, to_type, default=None):
     """Convert value to to_type, returns default if fails."""
@@ -135,3 +139,38 @@ def convert(value, to_type, default=None):
     except ValueError:
         # If value could not be converted
         return default
+
+
+def value_to_zero_or_one(s):
+    """Convert value to 1 or 0 string."""
+    if isinstance(s, str):
+        if s.lower() in ('true', 't', 'yes', 'y', '1'):
+            return '1'
+        if s.lower() in ('false', 'f', 'no', 'n', '0'):
+            return '0'
+    if isinstance(s, bool):
+        if s:
+            return '1'
+        return '0'
+
+    raise ValueError("Cannot covert {} to a 1 or 0".format(s))
+
+def zero_or_one_to_boolean(s):
+    """Convert 1 or 0 string to boolean."""
+    if isinstance(s, str):
+        if s == '1':
+            return True
+        if s == '0':
+            return False
+    if isinstance(s, bool):
+        return s
+
+    raise ValueError("Cannot covert {} to a boolean".format(s))
+
+def zero_or_one_dict_to_boolean(d):
+    """Convert a dict of one key with a 1 or 0 string to boolean."""
+    if isinstance(d, dict):
+        if len(d) == 1:
+            return zero_or_one_to_boolean(d.popitem()[1])
+
+    raise ValueError("Cannot covert {} to a boolean".format(s))

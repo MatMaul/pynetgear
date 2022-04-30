@@ -75,6 +75,11 @@ class Netgear(object):
 
         self._info = None
 
+        self.guest_2g_methods = [c.GET_GUEST_ACCESS_ENABLED, c.GET_GUEST_ACCESS_ENABLED_2]
+        self.guest_5g_methods = [c.GET_5G1_GUEST_ACCESS_ENABLED, c.GET_5G1_GUEST_ACCESS_ENABLED_2, c.GET_5G_GUEST_ACCESS_ENABLED_2]
+        self.guest_2g_set_methods = [c.SET_GUEST_ACCESS_ENABLED, c.SET_GUEST_ACCESS_ENABLED_2]
+        self.guest_5g_set_methods = [c.SET_5G_GUEST_ACCESS_ENABLED, c.SET_5G1_GUEST_ACCESS_ENABLED_2, c.SET_5G_GUEST_ACCESS_ENABLED_2]
+
     @property
     def soap_url(self):
         """SOAP url to connect to the router."""
@@ -106,7 +111,8 @@ class Netgear(object):
         method,
         params=None,
         body="",
-        need_auth=True
+        need_auth=True,
+        check=True,
     ):
         """Make an API request to the router."""
         # If we have no cookie (v2) or never called login before (v1)
@@ -168,7 +174,9 @@ class Netgear(object):
                     if not success:
                         _LOGGER.error("503 Service Unavailable after retry, "
                                       "the API may be overloaded.")
-                else:
+                elif h.is_service_not_found_response(response) and check:
+                    _LOGGER.error("404 service '%s', method '%s' not found", service, method)
+                elif check:
                     _LOGGER.error("Invalid response: %s\n%s\n%s",
                                   response.status_code, str(response.headers),
                                   response.text)
@@ -221,7 +229,7 @@ class Netgear(object):
         self.config_started = not success
         return success
 
-    def _get(self, service, method, parseNode=None, parse_text=lambda text: text):
+    def _get(self, service, method, parseNode=None, parse_text=lambda text: text, check=True):
         """Get information using a service and method from the router."""
         if parseNode is None:
             parseNode = f".//{method}Response"
@@ -229,7 +237,8 @@ class Netgear(object):
         _LOGGER.debug("Call %s", method)
         success, response = self._make_request(
             service,
-            method
+            method,
+            check=check,
         )
         if not success:
             _LOGGER.debug("Could not successfully get %s", method)
@@ -272,6 +281,40 @@ class Netgear(object):
             return False
 
         return True
+
+    def _get_methods(self, service, method_list):
+        for idx in range(len(method_list)):
+            method = method_list[idx]
+            response = self._get(
+                service,
+                method,
+                check=False,
+            )
+            if response is not None:
+               if idx!=0:
+                    # place the working method at the front of the list for next time
+                    method_list.insert(0, method_list.pop(idx))
+               break
+
+        return response
+
+    def _set_methods(self, service, method_list, params, get_function, expected):
+        for idx in range(len(method_list)):
+            method = method_list[idx]
+            response = self._set(
+                service,
+                method,
+                params,
+            )
+            if not response:
+               continue
+            if get_function() == expected:
+               if idx!=0:
+                    # place the working method at the front of the list for next time
+                    method_list.insert(0, method_list.pop(idx))
+               return True
+
+        return False
 
     def login_try_port(self):
         # first try the currently configured port-ssl combination
@@ -639,18 +682,16 @@ class Netgear(object):
         """
         return self._get(
             c.SERVICE_DEVICE_CONFIG,
-            c.GET_DEVICE_CONFIG_INFO,
+            "GetInfo",
         )
 
     def get_block_device_enable_status(self):
-        """
-        Get Block Device Enable Status and return dict like:
-        - NewBlockDeviceEnable
-        """
-        return self._get(
+        """Get Block Device Enable Status and return boolean."""
+        response = self._get(
             c.SERVICE_DEVICE_CONFIG,
             c.GET_BLOCK_DEVICE_ENABLE_STATUS
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
     def set_block_device_enable(self, value=False):
         """Set SetBlockDeviceEnable."""
@@ -662,14 +703,12 @@ class Netgear(object):
         )
 
     def get_traffic_meter_enabled(self):
-        """
-        Get Traffic Meter Enabled and return dict like:
-        - NewTrafficMeterEnable
-        """
-        return self._get(
+        """Get Traffic Meter Enabled and return boolean."""
+        response = self._get(
             c.SERVICE_DEVICE_CONFIG,
-            c.GET_TRAFFIC_METER_ENABLED, parseNode
+            c.GET_TRAFFIC_METER_ENABLED
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
     def get_traffic_meter_options(self):
         """
@@ -705,7 +744,7 @@ class Netgear(object):
         """
         return self._get(
             c.SERVICE_LAN_CONFIG_SECURITY,
-            c.GET_LAN_CONFIG_SEC_INFO,
+            "GetInfo",
         )
 
     def get_wan_ip_con_info(self):
@@ -725,18 +764,16 @@ class Netgear(object):
         """
         return self._get(
             c.SERVICE_WAN_IP_CONNECTION,
-            c.GET_WAN_IP_CON_INFO,
+            "GetInfo",
         )
 
     def get_parental_control_enable_status(self):
-        """
-        Get parental control enable status and return dict like:
-        - ParentalControl
-        """
-        return self._get(
+        """Get parental control enable status and return boolean."""
+        response = self._get(
             c.SERVICE_PARENTAL_CONTROL,
             c.GET_PARENTAL_CONTROL_ENABLE_STATUS
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
     def enable_parental_control(self, value=False):
         """Set EnableParentalControl."""
@@ -804,20 +841,69 @@ class Netgear(object):
         
         Response Code = 1 means in progress
         """
-        return self._get(
-            c.SERVICE_ADVANCED_QOS,
-            c.GET_SPEED_TEST_RESULT,
+        _LOGGER.debug("Retrieving speed test result")
+        for retry in range(1,10):
+            success, response = self._make_request(
+                c.SERVICE_ADVANCED_QOS,
+                c.GET_SPEED_TEST_RESULT,
+                check=False,
+            )
+            if response.status_code != 200:
+                _LOGGER.debug("Could not successfully get %s", c.GET_SPEED_TEST_RESULT)
+                return None
+
+            success, node = h.find_node(
+                response.text,
+                f".//ResponseCode"
+            )
+            if not success:
+                _LOGGER.debug("Could not parse response for speed test result")
+                return None
+
+            if node.text=='0':  # new test done
+                break
+            if node.text=='1':  # test in progress
+                sleep(2)
+                continue
+            if node.text=='501':    # old test result
+                _LOGGER.warning("old speed test result returned")
+                break
+            _LOGGER.error("Unexpected return code for speed test: '%s'", node.text)
+            return None
+
+        success, node = h.find_node(
+            response.text,
+            f".//{c.GET_SPEED_TEST_RESULT}Response"
         )
+        if not success:
+            _LOGGER.debug("Could not parse response for speed test result")
+            return None
+
+        return {t.tag: t.text for t in node}
+
+    def get_new_speed_test_result(self):
+        """
+        Request a new speed test and get the results and return dict like:
+        - NewOOKLAUplinkBandwidth
+        - NewOOKLADownlinkBandwidth
+        - AveragePing
+        
+        Response Code = 1 means in progress
+        """
+        if not self.set_speed_test_start():
+            return None
+        return self.get_speed_test_result()
 
     def get_qos_enable_status(self):
         """
         Get QoS Enable Status and return dict like:
         - NewQoSEnableStatus
         """
-        return self._get(
+        response = self._get(
             c.SERVICE_ADVANCED_QOS,
             c.GET_QOS_ENABLE_STATUS,
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
     def set_qos_enable_status(self, value=False):
         """Set QoS Enable Status."""
@@ -840,96 +926,47 @@ class Netgear(object):
             c.GET_BANDWIDTH_CONTROL_OPTIONS,
         )
 
-    def get_guest_access_enabled(self):
-        """
-        Get Guest Access Enabled and return dict like:
-        - NewGuestAccessEnabled
-        """
-        response = self._get(
+    def get_2g_guest_access_enabled(self):
+        """Get 2.4G Guest Access Enabled and return boolean."""
+        response = self._get_methods(
             c.SERVICE_WLAN_CONFIGURATION,
-            c.GET_GUEST_ACCESS_ENABLED,
+            self.guest_2g_methods,
         )
-
-        if response is None:
-            response = self._get(
-                c.SERVICE_WLAN_CONFIGURATION,
-                c.GET_GUEST_ACCESS_ENABLED_2
-            )
-
-        return response
+        return h.zero_or_one_dict_to_boolean(response)
 
     def get_5g_guest_access_enabled(self):
-        """
-        Get 5G Guest Access Enabled and return dict like:
-        - NewGuestAccessEnabled
-        """
-        response = self._get(
+        """Get 5G Guest Access Enabled and return boolean"""
+        response = self._get_methods(
             c.SERVICE_WLAN_CONFIGURATION,
-            c.GET_5G1_GUEST_ACCESS_ENABLED
+            self.guest_5g_methods,
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
-        if resonse is None:
-            response = self._get(
-                c.SERVICE_WLAN_CONFIGURATION,
-                c.GET_5G1_GUEST_ACCESS_ENABLED_2
-            )
-
-        if resonse is None:
-            response = self._get(
-                c.SERVICE_WLAN_CONFIGURATION,
-                c.GET_5G_GUEST_ACCESS_ENABLED_2
-            )
-
-        return response
-
-    def set_guest_access_enabled(self, value=False):
+    def set_2g_guest_access_enabled(self, value=False):
         """Set Guest Access Enabled."""
         value = h.value_to_zero_or_one(value)
-        return self._set(
+        return self._set_methods(
             c.SERVICE_WLAN_CONFIGURATION,
-            c.SET_GUEST_ACCESS_ENABLED,
+            self.guest_2g_set_methods,
             {"NewGuestAccessEnabled": value},
-        )
-
-    def set_guest_access_enabled_2(self, value=False):
-        """Set Guest Access Enabled 2."""
-        value = h.value_to_zero_or_one(value)
-        return self._set(
-            c.SERVICE_WLAN_CONFIGURATION,
-            c.SET_GUEST_ACCESS_ENABLED_2,
-            {"NewGuestAccessEnabled": value},
+            self.get_2g_guest_access_enabled,
+            h.zero_or_one_to_boolean(value),
         )
 
     def set_5g_guest_access_enabled(self, value=False):
         """Set 5G Guest Access Enabled."""
         value = h.value_to_zero_or_one(value)
-        return self._set(
+        return self._set_methods(
             c.SERVICE_WLAN_CONFIGURATION,
-            c.SET_5G_GUEST_ACCESS_ENABLED,
+            self.guest_5g_set_methods,
             {"NewGuestAccessEnabled": value},
+            self.get_5g_guest_access_enabled,
+            h.zero_or_one_to_boolean(value),
         )
 
-    def set_5g_guest_access_enabled_2(self, value=False):
-        """Set 5G Guest Access Enabled 2."""
-        value = h.value_to_zero_or_one(value)
-        return self._set(
-            c.SERVICE_WLAN_CONFIGURATION,
-            c.SET_5G_GUEST_ACCESS_ENABLED_2,
-            {"NewGuestAccessEnabled": value},
-        )
-
-    def set_5g_guest_access_enabled_3(self, value=False):
-        """Set 5G Guest Access Enabled 3."""
-        value = h.value_to_zero_or_one(value)
-        return self._set(
-            c.SERVICE_WLAN_CONFIGURATION,
-            c.SET_5G1_GUEST_ACCESS_ENABLED_2,
-            {"NewGuestAccessEnabled": value},
-        )
-
-    def get_wpa_security_keys(self):
+    def get_2g_wpa_security_keys(self):
         """
-        Get WPA Security Keys and return dict like:
+        Get 2.4G WPA Security Keys and return dict like:
         - NewWPAPassphrase
         """
         return self._get(
@@ -984,12 +1021,12 @@ class Netgear(object):
         """
         return self._get(
             c.SERVICE_WLAN_CONFIGURATION,
-            c.GET_2G_INFO,
+            "GetInfo",
         )
 
-    def get_guest_access_network_info(self):
+    def get_2g_guest_access_network_info(self):
         """
-        Get Guest Access Network Info and return dict like:
+        Get 2.4G Guest Access Network Info and return dict like:
         - NewSSID
         - NewSecurityMode
         - NewKey
