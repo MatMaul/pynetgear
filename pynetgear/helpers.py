@@ -15,23 +15,42 @@ _LOGGER = logging.getLogger(__name__)
 # cf https://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
 if sys.version_info[0] == 3:
     unichr = chr
-_illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
-                    (0x7F, 0x84), (0x86, 0x9F),
-                    (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+_illegal_unichrs = [
+    (0x00, 0x08),
+    (0x0B, 0x0C),
+    (0x0E, 0x1F),
+    (0x7F, 0x84),
+    (0x86, 0x9F),
+    (0xFDD0, 0xFDDF),
+    (0xFFFE, 0xFFFF),
+]
 if sys.maxunicode >= 0x10000:  # not narrow build
-    _illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
-                             (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
-                             (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
-                             (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
-                             (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
-                             (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
-                             (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
-                             (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+    _illegal_unichrs.extend(
+        [
+            (0x1FFFE, 0x1FFFF),
+            (0x2FFFE, 0x2FFFF),
+            (0x3FFFE, 0x3FFFF),
+            (0x4FFFE, 0x4FFFF),
+            (0x5FFFE, 0x5FFFF),
+            (0x6FFFE, 0x6FFFF),
+            (0x7FFFE, 0x7FFFF),
+            (0x8FFFE, 0x8FFFF),
+            (0x9FFFE, 0x9FFFF),
+            (0xAFFFE, 0xAFFFF),
+            (0xBFFFE, 0xBFFFF),
+            (0xCFFFE, 0xCFFFF),
+            (0xDFFFE, 0xDFFFF),
+            (0xEFFFE, 0xEFFFF),
+            (0xFFFFE, 0xFFFFF),
+            (0x10FFFE, 0x10FFFF),
+        ]
+    )
 
-_illegal_ranges = ["%s-%s" % (unichr(low), unichr(high))
-                   for (low, high) in _illegal_unichrs]
+_illegal_ranges = [
+    "%s-%s" % (unichr(low), unichr(high)) for (low, high) in _illegal_unichrs
+]
 
-_illegal_xml_chars_RE = re.compile(u'[%s]' % u''.join(_illegal_ranges))
+_illegal_xml_chars_RE = re.compile("[%s]" % "".join(_illegal_ranges))
 
 
 def autodetect_url():
@@ -51,7 +70,7 @@ def autodetect_url():
                 url + "/soap/server_sa/",
                 headers=get_soap_headers("Test:1", "test"),
                 verify=False,
-                timeout=1
+                timeout=1,
             )
             if resp.status_code == 200:
                 return url
@@ -62,14 +81,14 @@ def autodetect_url():
 
 
 def find_node(text, xpath):
-    text = _illegal_xml_chars_RE.sub('', text)
+    text = _illegal_xml_chars_RE.sub("", text)
 
     try:
         it = ET.iterparse(StringIO(text))
         # strip all namespaces
         for _, el in it:
-            if '}' in el.tag:
-                el.tag = el.tag.split('}', 1)[1]
+            if "}" in el.tag:
+                el.tag = el.tag.split("}", 1)[1]
     except ET.ParseError:
         _LOGGER.error("Error parsing XML response")
         _LOGGER.debug("Error parsing XML response", exc_info=True)
@@ -100,38 +119,37 @@ def xml_get(e, name):
 def get_soap_headers(service, method):
     action = SERVICE_PREFIX + service + "#" + method
     return {
-        "SOAPAction":    action,
+        "SOAPAction": action,
         "Cache-Control": "no-cache",
-        "User-Agent":    "pynetgear",
-        "Content-Type":  "multipart/form-data"
+        "User-Agent": "pynetgear",
+        "Content-Type": "multipart/form-data",
     }
 
 
 def is_valid_response(resp):
-    return (resp.status_code == 200 and
-            ("<ResponseCode>0000</" in resp.text or
-             "<ResponseCode>000</" in resp.text or
-             "<ResponseCode>0</" in resp.text or
-             # Speed Test Result
-             "<ResponseCode>2</" in resp.text or
-             # dns_masq/mac_address
-             "<ResponseCode>001</" in resp.text
-             ))
+    return resp.status_code == 200 and (
+        "<ResponseCode>0000</" in resp.text
+        or "<ResponseCode>000</" in resp.text
+        or "<ResponseCode>0</" in resp.text
+        or
+        # Speed Test Result
+        "<ResponseCode>2</" in resp.text
+        or
+        # dns_masq/mac_address
+        "<ResponseCode>001</" in resp.text
+    )
 
 
 def is_unauthorized_response(resp):
-    return (resp.status_code == 401 or
-            "<ResponseCode>401</ResponseCode>" in resp.text)
+    return resp.status_code == 401 or "<ResponseCode>401</ResponseCode>" in resp.text
 
 
 def is_service_unavailable_response(resp):
-    return (resp.status_code == 503 or
-            "<ResponseCode>503</ResponseCode>" in resp.text)
+    return resp.status_code == 503 or "<ResponseCode>503</ResponseCode>" in resp.text
 
 
 def is_service_not_found_response(resp):
-    return (resp.status_code == 404 or
-            "<ResponseCode>404</ResponseCode>" in resp.text)
+    return resp.status_code == 404 or "<ResponseCode>404</ResponseCode>" in resp.text
 
 
 def convert(value, to_type, default=None):
@@ -146,14 +164,14 @@ def convert(value, to_type, default=None):
 def value_to_zero_or_one(s):
     """Convert value to 1 or 0 string."""
     if isinstance(s, str):
-        if s.lower() in ('true', 't', 'yes', 'y', '1'):
-            return '1'
-        if s.lower() in ('false', 'f', 'no', 'n', '0'):
-            return '0'
+        if s.lower() in ("true", "t", "yes", "y", "1"):
+            return "1"
+        if s.lower() in ("false", "f", "no", "n", "0"):
+            return "0"
     if isinstance(s, bool):
         if s:
-            return '1'
-        return '0'
+            return "1"
+        return "0"
 
     raise ValueError("Cannot covert {} to a 1 or 0".format(s))
 
@@ -161,9 +179,9 @@ def value_to_zero_or_one(s):
 def zero_or_one_to_boolean(s):
     """Convert 1 or 0 string to boolean."""
     if isinstance(s, str):
-        if s == '1':
+        if s == "1":
             return True
-        if s == '0':
+        if s == "0":
             return False
     if isinstance(s, bool):
         return s
