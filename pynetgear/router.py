@@ -337,8 +337,7 @@ class Netgear(object):
                 check=False,
             )
             if response is not None:
-                if idx != 0:
-                # place the working method at the front of the list for next time
+                if idx != 0:  # move to front for next time
                     method_list.insert(0, method_list.pop(idx))
                 break
 
@@ -357,8 +356,7 @@ class Netgear(object):
             if not response:
                 continue
             if get_function() == expected:
-                if idx != 0:
-                # place the working method at the front of the list for next time
+                if idx != 0:  # move to front for next time
                     method_list.insert(0, method_list.pop(idx))
                 return True
 
