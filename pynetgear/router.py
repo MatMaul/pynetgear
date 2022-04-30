@@ -873,8 +873,8 @@ class Netgear(object):
             c.SERVICE_DEVICE_INFO,
             c.GET_SUPPORT_FEATURE_LIST_XML,
             parseNode=(
-                ".//{%s}Response/" % (c.GET_SUPPORT_FEATURE_LIST_XML)
-                "newFeatureList/features"
+                ".//{%s}Response/newFeatureList/features"
+                % (c.GET_SUPPORT_FEATURE_LIST_XML)
             ),
         )
 
