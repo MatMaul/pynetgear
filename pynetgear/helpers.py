@@ -12,7 +12,7 @@ from .const import SERVICE_PREFIX
 _LOGGER = logging.getLogger(__name__)
 
 # define regex to filter invalid XML codes
-# cf https://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python
+# cf https://stackoverflow.com/questions/1707890/fast-way-to-filter-illegal-xml-unicode-chars-in-python  # noqa: E501
 if sys.version_info[0] == 3:
     unichr = chr
 _illegal_unichrs = [

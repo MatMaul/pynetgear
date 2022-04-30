@@ -115,9 +115,7 @@ def argparser():
         help="Choose between verbose and slower or terse and fast.",
     )
 
-    subparsers.add_parser(
-        "traffic_meter", help="Output router's traffic meter data"
-    )
+    subparsers.add_parser("traffic_meter", help="Output router's traffic meter data")
 
     return parser
 

@@ -873,7 +873,10 @@ class Netgear(object):
         return self._get(
             c.SERVICE_DEVICE_INFO,
             c.GET_SUPPORT_FEATURE_LIST_XML,
-            parseNode=f".//{c.GET_SUPPORT_FEATURE_LIST_XML}Response/newFeatureList/features",
+            parseNode= (
+                f".//{c.GET_SUPPORT_FEATURE_LIST_XML}Response/"
+                "newFeatureList/features"
+            ),
         )
 
     def set_speed_test_start(self):
