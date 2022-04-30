@@ -295,7 +295,8 @@ class Netgear(object):
         _LOGGER.debug("Call %s", method)
         if self.config_started:
             _LOGGER.error(
-                "Inconsistant configuration state, configuration already started"
+                "Inconsistant configuration state, "
+                "configuration already started"
             )
             if not self.config_finish():
                 return False
@@ -320,7 +321,8 @@ class Netgear(object):
 
         if not self.config_finish():
             _LOGGER.error(
-                "Inconsistant configuration state, configuration already finished"
+                "Inconsistant configuration state, "
+                "configuration already finished"
             )
             return False
 
@@ -336,7 +338,7 @@ class Netgear(object):
             )
             if response is not None:
                 if idx != 0:
-                    # place the working method at the front of the list for next time
+                # place the working method at the front of the list for next time
                     method_list.insert(0, method_list.pop(idx))
                 break
 
@@ -356,7 +358,7 @@ class Netgear(object):
                 continue
             if get_function() == expected:
                 if idx != 0:
-                    # place the working method at the front of the list for next time
+                # place the working method at the front of the list for next time
                     method_list.insert(0, method_list.pop(idx))
                 return True
 
@@ -701,9 +703,10 @@ class Netgear(object):
     def allow_block_device(self, mac_addr, device_status=c.BLOCK):
         """
         Allow or Block a device via its Mac Address.
-        Pass in the mac address for the device that you want to set. Pass in the
-        device_status you wish to set the device to: Allow (allow device to access the
-        network) or Block (block the device from accessing the network).
+        Pass in the mac address for the device that you want to set.
+        Pass in the device_status you wish to set the device to:
+        Allow (allow device to access the network)
+        or Block (block the device from accessing the network).
         """
         return self._set(
             c.SERVICE_DEVICE_CONFIG,
@@ -892,7 +895,7 @@ class Netgear(object):
         Response Code = 1 means in progress
         """
         _LOGGER.debug("Retrieving speed test result")
-        for retry in range(1, 10):
+        for _retry in range(1, 10):
             success, response = self._make_request(
                 c.SERVICE_ADVANCED_QOS,
                 c.GET_SPEED_TEST_RESULT,
