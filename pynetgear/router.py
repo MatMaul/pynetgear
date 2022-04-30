@@ -224,7 +224,7 @@ class Netgear(object):
     def _get(self, service, method, parseNode=None, parse_text=lambda text: text):
         """Get information using a service and method from the router."""
         if parseNode is None:
-            parseNode = f".//{method}Response",
+            parseNode = f".//{method}Response"
 
         _LOGGER.debug("Call %s", method)
         success, response = self._make_request(
