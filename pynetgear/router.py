@@ -186,7 +186,7 @@ class Netgear(object):
                 response = self._post_request(headers, message)
 
             success = h.is_valid_response(response)
-            if not success and not self._logging_in:
+            if not success:
                 if h.is_unauthorized_response(response):
                     err_mess = (
                         "Unauthorized response, "
