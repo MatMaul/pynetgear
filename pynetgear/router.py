@@ -431,8 +431,8 @@ class Netgear(object):
         success, response = self._make_request(
             c.SERVICE_DEVICE_CONFIG,
             c.LOGIN,
-            params = {"Username": self.username, "Password": self.password},
-            need_auth = False,
+            params={"Username": self.username, "Password": self.password},
+            need_auth=False,
         )
 
         if not success:
