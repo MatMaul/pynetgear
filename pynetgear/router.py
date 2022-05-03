@@ -188,7 +188,7 @@ class Netgear(object):
             success = h.is_valid_response(response)
             if not success and not self._logging_in:
                 if h.is_unauthorized_response(response):
-                    err_mess=(
+                    err_mess = (
                         "Unauthorized response, "
                         "after seemingly successful re-login"
                     )
@@ -198,24 +198,26 @@ class Netgear(object):
                     response = self._post_request(headers, message)
                     success = h.is_valid_response(response)
                     if not success:
-                        err_mess=(
+                        err_mess = (
                             "503 Service Unavailable after retry, "
                             "the API may be overloaded."
                         )
                 elif h.is_service_not_found_response(response):
-                    err_mess=(
+                    err_mess = (
                         "404 service '%s', method '%s' not found"
                         % (service, method)
                     )
                 else:
-                    err_mess=(
+                    err_mess = (
                         "Invalid response: %s\n%s\n%s"
-                        % (response.status_code, str(response.headers), response.text)
+                        % (response.status_code,
+                           str(response.headers),
+                           response.text)
                     )
             if not success and not self._logging_in:
                 if check:
                     _LOGGER.error(err_mess)
-            elif not succes:
+            elif not success:
                 _LOGGER.debug(err_mess)
 
             return success, response
