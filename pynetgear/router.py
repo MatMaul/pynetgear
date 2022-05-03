@@ -236,7 +236,7 @@ class Netgear(object):
         success, _ = self._make_request(
             c.SERVICE_DEVICE_CONFIG,
             c.CONFIGURATION_STARTED,
-            {"NewSessionID": c.SESSION_ID},
+            params={"NewSessionID": c.SESSION_ID},
         )
 
         self.config_started = success
@@ -254,7 +254,7 @@ class Netgear(object):
         success, _ = self._make_request(
             c.SERVICE_DEVICE_CONFIG,
             c.CONFIGURATION_FINISHED,
-            {"NewStatus": "ChangesApplied"},
+            params={"NewStatus": "ChangesApplied"},
         )
 
         self.config_started = not success
@@ -431,9 +431,8 @@ class Netgear(object):
         success, response = self._make_request(
             c.SERVICE_DEVICE_CONFIG,
             c.LOGIN,
-            {"Username": self.username, "Password": self.password},
-            None,
-            False,
+            params = {"Username": self.username, "Password": self.password},
+            need_auth = False,
         )
 
         if not success:
@@ -456,7 +455,7 @@ class Netgear(object):
         )
 
         success, _ = self._make_request(
-            c.SERVICE_PARENTAL_CONTROL, c.LOGIN_OLD, None, body, False
+            c.SERVICE_PARENTAL_CONTROL, c.LOGIN_OLD, body=body, need_auth=False
         )
 
         self.cookie = success
