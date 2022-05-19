@@ -63,7 +63,7 @@ class Netgear(object):
             user = c.DEFAULT_USER
 
         try:
-            IPv6Address(address)
+            IPv6Address(host)
         except ValueError:
             pass
         else:
