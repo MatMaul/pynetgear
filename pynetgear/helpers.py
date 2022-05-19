@@ -188,12 +188,17 @@ def zero_or_one_to_boolean(s):
             return False
     if isinstance(s, bool):
         return s
+    if s is None:
+        return None
 
     raise ValueError("Cannot covert {} to a boolean".format(s))
 
 
 def zero_or_one_dict_to_boolean(d):
     """Convert a dict of one key with a 1 or 0 string to boolean."""
+    if d is None:
+        return None
+
     if isinstance(d, dict):
         if len(d) == 1:
             return zero_or_one_to_boolean(d.popitem()[1])

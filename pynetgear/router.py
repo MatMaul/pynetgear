@@ -1120,14 +1120,12 @@ class Netgear(object):
         )
 
     def get_smart_connect_enabled(self):
-        """
-        Get Smart Connect Enabled and return dict like:
-        - NewSmartConnectEnable
-        """
-        return self._get(
+        """Get Smart Connect Enabled and return boolean."""
+        response = self._get(
             c.SERVICE_WLAN_CONFIGURATION,
             c.GET_SMART_CONNECT_ENABLED,
         )
+        return h.zero_or_one_dict_to_boolean(response)
 
     def set_smart_connect_enabled(self, value=False):
         """Set Smart Connect Enable."""
