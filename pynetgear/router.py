@@ -7,6 +7,7 @@ from datetime import timedelta
 from time import sleep
 
 import requests
+from ipaddress import IPv6Address
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -60,6 +61,13 @@ class Netgear(object):
             port = c.DEFAULT_PORT
         if not user:
             user = c.DEFAULT_USER
+
+        try:
+            IPv6Address(address)
+        except ValueError:
+            pass
+        else:
+            host = "[%s]" % (host)
 
         self.username = user
         self.password = password
