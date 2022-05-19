@@ -7,6 +7,7 @@ from datetime import timedelta
 from time import sleep
 
 import requests
+from ipaddress import IPv6Address
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -60,6 +61,13 @@ class Netgear(object):
             port = c.DEFAULT_PORT
         if not user:
             user = c.DEFAULT_USER
+
+        try:
+            IPv6Address(host)
+        except ValueError:
+            pass
+        else:
+            host = "[%s]" % (host)
 
         self.username = user
         self.password = password
@@ -222,12 +230,12 @@ class Netgear(object):
 
             return success, response
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as err:
             if not self._logging_in:
                 _LOGGER.exception("Error talking to API")
             else:
                 _LOGGER.debug("RequestException while logging in "
-                              "port %s ssl %s", self.port, self.ssl)
+                              "port %s ssl %s: %s", self.port, self.ssl, err)
             self.cookie = None
 
             # Maybe one day we will distinguish between
