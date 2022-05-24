@@ -742,6 +742,14 @@ class Netgear(object):
             c.CHECK_NEW_FIRMWARE,
         )
 
+    def update_new_firmware(self):
+        """Issue a firmware update of the router."""
+        return self._set(
+            c.SERVICE_DEVICE_CONFIG,
+            c.UPDATE_NEW_FIRMWARE,
+            {"YesOrNo": "1"},
+        )
+
     def get_device_config_info(self):
         """
         Get Device Config Info and return dict like:
