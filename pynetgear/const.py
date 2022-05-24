@@ -29,6 +29,7 @@ SERVICE_WAN_IP_CONNECTION = "WANIPConnection:1"
 SERVICE_PARENTAL_CONTROL = "ParentalControl:1"
 SERVICE_ADVANCED_QOS = "AdvancedQoS:1"
 SERVICE_WLAN_CONFIGURATION = "WLANConfiguration:1"
+SERVICE_WAN_ETHERNET_LINK_CONFIG = "WANEthernetLinkConfig:1"
 SERVICE_USER_OPTIONS_TC = "UserOptionsTC:1"
 
 # ---------------------
@@ -114,6 +115,11 @@ GET_GUEST_ACCESS_NETWORK_INFO = "GetGuestAccessNetworkInfo"
 GET_5G_GUEST_ACCESS_NETWORK_INFO = "Get5GGuestAccessNetworkInfo"
 GET_SMART_CONNECT_ENABLED = "IsSmartConnectEnabled"
 SET_SMART_CONNECT_ENABLED = "SetSmartConnectEnable"
+
+# ---------------------
+# SERVICE_WAN_ETHERNET_LINK_CONFIG
+# ---------------------
+GET_ETHERNET_LINK_STATUS = "GetEthernetLinkStatus"
 
 # ---------------------
 # SERVICE_USER_OPTIONS_TC
