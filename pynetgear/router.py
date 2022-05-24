@@ -742,6 +742,24 @@ class Netgear(object):
             c.CHECK_NEW_FIRMWARE,
         )
 
+    def update_new_firmware(self):
+        """Issue a firmware update of the router."""
+        return self._set(
+            c.SERVICE_DEVICE_CONFIG,
+            c.UPDATE_NEW_FIRMWARE,
+            {"YesOrNo": "1"},
+        )
+
+    def check_ethernet_link(self):
+        """
+        Check the ethernet link status and return dict like:
+        - NewEthernetLinkStatus
+        """
+        return self._get(
+            c.SERVICE_WAN_ETHERNET_LINK_CONFIG,
+            c.GET_ETHERNET_LINK_STATUS,
+        )
+
     def get_device_config_info(self):
         """
         Get Device Config Info and return dict like:
