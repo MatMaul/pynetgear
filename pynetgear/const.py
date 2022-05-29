@@ -75,6 +75,7 @@ GET_DNS_MASQ_DEVICE_ID = "GetDNSMasqDeviceID"
 GET_SUPPORT_FEATURE_LIST_XML = "GetSupportFeatureListXML"
 GET_ATTACHED_DEVICES = "GetAttachDevice"
 GET_ATTACHED_DEVICES_2 = "GetAttachDevice2"
+GET_SYSTEM_INFO = "GetSystemInfo"
 # SET_DEVICE_NAME_ICON_BY_MAC = 'SetDeviceNameIconByMAC'
 # SET_DEVICE_NAME = 'SetNetgearDeviceName'
 

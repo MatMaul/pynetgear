@@ -750,6 +750,20 @@ class Netgear(object):
             {"YesOrNo": "1"},
         )
 
+    def get_system_info(self):
+        """
+        Get system Info and return dict like:
+        - NewCPUUtilization
+        - NewPhysicalMemory
+        - NewMemoryUtilization
+        - NewPhysicalFlash
+        - NewAvailableFlash
+        """
+        return self._get(
+            c.SERVICE_DEVICE_INFO,
+            c.GET_SYSTEM_INFO,
+        )
+
     def check_ethernet_link(self):
         """
         Check the ethernet link status and return dict like:
