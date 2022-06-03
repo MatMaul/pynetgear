@@ -959,9 +959,9 @@ class Netgear(object):
                 _LOGGER.debug("Could not parse response for speed test result")
                 return None
 
-            if node.text == "0":  # new test done
+            if node.text in ["0", "000", "0000"]:  # new test done
                 break
-            if node.text == "1":  # test in progress
+            if node.text in ["1", "001"]:  # test in progress
                 sleep(2)
                 continue
             if node.text == "501":  # old test result
