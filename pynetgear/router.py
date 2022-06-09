@@ -949,19 +949,29 @@ class Netgear(object):
                 check=False,
             )
             if response.status_code != 200:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "Could not successfully get %s", c.GET_SPEED_TEST_RESULT
                 )
                 return None
 
             success, node = h.find_node(response.text, ".//ResponseCode")
             if not success:
-                _LOGGER.debug("Could not parse response for speed test result")
+                _LOGGER.warning("Could not parse response for speed test result")
                 return None
 
             if node.text in ["0", "000", "0000"]:  # new test done
+                _LOGGER.debug("new speed test retrieved")
                 break
             if node.text in ["1", "001"]:  # test in progress
+                if _retry >= 10:
+                    _LOGGER.warning(
+                        "speed test still in progress while maximum"
+                        " retries reached, returning partial results"
+                    )
+                    continue
+                _LOGGER.debug(
+                    "speed test still in progress, sleep for 2 seconds"
+                )
                 sleep(2)
                 continue
             if node.text == "501":  # old test result
@@ -976,7 +986,7 @@ class Netgear(object):
             response.text, ".//%sResponse" % (c.GET_SPEED_TEST_RESULT)
         )
         if not success:
-            _LOGGER.debug("Could not parse response for speed test result")
+            _LOGGER.warning("Could not parse response for speed test result")
             return None
 
         return {t.tag: t.text for t in node}
