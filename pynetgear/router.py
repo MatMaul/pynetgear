@@ -942,7 +942,7 @@ class Netgear(object):
         Response Code = 1 means in progress
         """
         _LOGGER.debug("Retrieving speed test result")
-        for _retry in range(1, 10):
+        for _retry in range(1, 30+1):
             success, response = self._make_request(
                 c.SERVICE_ADVANCED_QOS,
                 c.GET_SPEED_TEST_RESULT,
@@ -963,14 +963,16 @@ class Netgear(object):
                 _LOGGER.debug("new speed test retrieved")
                 break
             if node.text in ["1", "001"]:  # test in progress
-                if _retry >= 10:
+                if _retry >= 30:
                     _LOGGER.warning(
                         "speed test still in progress while maximum"
                         " retries reached, returning partial results"
                     )
                     continue
                 _LOGGER.debug(
-                    "speed test still in progress, sleep for 2 seconds"
+                    "speed test still in progress after %i attempts, "
+                    "sleep for 2 seconds",
+                    _retry
                 )
                 sleep(2)
                 continue
