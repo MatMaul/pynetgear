@@ -208,7 +208,8 @@ class Netgear(object):
                     if not success:
                         err_mess = (
                             "503 Service Unavailable after retry, "
-                            "the API may be overloaded."
+                            "the API may be overloaded '%s', '%s'."
+                            % (service, method)
                         )
                 elif h.is_service_not_found_response(response):
                     err_mess = (
@@ -217,8 +218,10 @@ class Netgear(object):
                     )
                 else:
                     err_mess = (
-                        "Invalid response: %s\n%s\n%s"
-                        % (response.status_code,
+                        "Invalid response to '%s', '%s': %s\n%s\n%s"
+                        % (service,
+                           method,
+                           response.status_code,
                            str(response.headers),
                            response.text)
                     )
@@ -232,7 +235,7 @@ class Netgear(object):
 
         except requests.exceptions.RequestException as err:
             if not self._logging_in:
-                _LOGGER.exception("Error talking to API")
+                _LOGGER.exception("Error talking to API with service '%s' method '%s'" % (service, method))
             else:
                 _LOGGER.debug("RequestException while logging in "
                               "port %s ssl %s: %s", self.port, self.ssl, err)
