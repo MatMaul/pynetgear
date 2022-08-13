@@ -235,7 +235,8 @@ class Netgear(object):
         except requests.exceptions.ReadTimeout as err:
             if not self._logging_in:
                 _LOGGER.error(
-                    "Netgear ReadTimeout, service '%s', method '%s', host %s:%s ssl %s"
+                    "Netgear ReadTimeout, service '%s', method '%s', "
+                    "host %s:%s ssl %s"
                     % (service, method, self.host, self.port, self.ssl)
                 )
             else:
