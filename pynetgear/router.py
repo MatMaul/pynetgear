@@ -232,13 +232,27 @@ class Netgear(object):
                 _LOGGER.debug(err_mess)
 
             return success, response
-
+        except requests.exceptions.ReadTimeout as err:
+            if not self._logging_in:
+                _LOGGER.error(
+                    "Netgear ReadTimeout, service '%s', method '%s', "
+                    "host %s:%s ssl %s"
+                    % (service, method, self.host, self.port, self.ssl)
+                )
+            else:
+                _LOGGER.debug("ReadTimeout while logging in "
+                              "port %s ssl %s: %s", self.port, self.ssl, err)
         except requests.exceptions.RequestException as err:
             if not self._logging_in:
-                _LOGGER.exception("Error talking to API with service '%s' method '%s'" % (service, method))
+                _LOGGER.exception(
+                    "Error talking to API with service '%s' "
+                    "method '%s' host %s:%s ssl %s"
+                    % (service, method, self.host, self.port, self.ssl)
+                )
             else:
                 _LOGGER.debug("RequestException while logging in "
-                              "port %s ssl %s: %s", self.port, self.ssl, err)
+                              "host %s:%s ssl %s: %s",
+                              self.host, self.port, self.ssl, err)
             self.cookie = None
 
             # Maybe one day we will distinguish between
