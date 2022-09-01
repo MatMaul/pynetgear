@@ -253,11 +253,8 @@ class Netgear(object):
                 _LOGGER.debug("RequestException while logging in "
                               "host %s:%s ssl %s: %s",
                               self.host, self.port, self.ssl, err)
-            self.cookie = None
-
-            # Maybe one day we will distinguish between
-            # different errors..
-            return False, None
+        self.cookie = None
+        return False, None
 
     def config_start(self):
         """
