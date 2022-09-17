@@ -131,12 +131,12 @@ def is_valid_response(resp):
         "<ResponseCode>0000</" in resp.text
         or "<ResponseCode>000</" in resp.text
         or "<ResponseCode>0</" in resp.text
-        or
-        # Speed Test Result
-        "<ResponseCode>2</" in resp.text
-        or
-        # dns_masq/mac_address
-        "<ResponseCode>001</" in resp.text
+        or "<ResponseCode>1</" in resp.text
+        or "<ResponseCode>001</" in resp.text  # dns_masq/mac_address
+        or "<ResponseCode>2</" in resp.text   # Speed Test Result
+        or "<ResponseCode>002</" in resp.text
+        or "<ResponseCode>3</" in resp.text
+        or "<ResponseCode>003</" in resp.text
     )
 
 
