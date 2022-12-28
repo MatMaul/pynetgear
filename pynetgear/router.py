@@ -197,7 +197,9 @@ class Netgear(object):
             # or the IP-bound session expired (v1)
             self.cookie = None
             if not retry:
-                _LOGGER.debug("Unauthorized response, let's login and retry...")
+                _LOGGER.debug(
+                    "Unauthorized response, let's login and retry..."
+                )
                 return self._try_request(message, service, method, params,
                                          need_auth, check, retry=True)
             _LOGGER.error("Unauthorized response, re-login failed")
@@ -227,7 +229,8 @@ class Netgear(object):
                 )
             elif h.is_missing_parameter_response(response):
                 err_mess = (
-                    "402 missing paramters: service '%s', method '%s', params '%s'"
+                    "402 missing paramters: "
+                    "service '%s', method '%s', params '%s'"
                     % (service, method, params)
                 )
             elif h.is_service_not_found_response(response):
