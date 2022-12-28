@@ -147,10 +147,10 @@ class Netgear(object):
         if need_auth and not self.cookie:
             if not self.login():
                 return False, None
-        
+
         # update cookie in the headers
         headers = self._get_headers(service, method, need_auth)
-        
+
         # Try to send the request
         try:
             response = self._post_request(headers, message)
@@ -158,7 +158,7 @@ class Netgear(object):
             self.cookie = None
             if not retry:
                 _LOGGER.debug("SSL error, try again after re-login")
-                return self._try_request(message, service, method, 
+                return self._try_request(message, service, method,
                                          params, need_auth, check, retry=True)
             _LOGGER.error("SSLError, re-login failed")
             return False, response
@@ -278,7 +278,8 @@ class Netgear(object):
             )
 
         message = c.SOAP_REQUEST.format(session_id=c.SESSION_ID, body=body)
-        return self._try_request(message, service, method, params, need_auth, check)
+        return self._try_request(message, service, method,
+                                 params, need_auth, check)
 
     def config_start(self):
         """
