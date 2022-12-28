@@ -149,6 +149,13 @@ def is_service_unavailable_response(resp):
     return (resp.status_code == 503 or
             "<ResponseCode>503</ResponseCode>" in resp.text)
 
+def is_invalid_method_response(resp):
+    return (resp.status_code == 501 or
+            "<ResponseCode>501</ResponseCode>" in resp.text)
+
+def is_missing_parameter_response(resp):
+    return (resp.status_code == 402 or
+            "<ResponseCode>402</ResponseCode>" in resp.text)
 
 def is_service_not_found_response(resp):
     return (resp.status_code == 404 or

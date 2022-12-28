@@ -211,9 +211,19 @@ class Netgear(object):
                             "the API may be overloaded '%s', '%s'."
                             % (service, method)
                         )
+                elif h.is_invalid_method_response(response):
+                    err_mess = (
+                        "501 service '%s', method '%s', method not found"
+                        % (service, method)
+                    )
+                elif h.is_missing_parameter_response(response):
+                    err_mess = (
+                        "402 missing paramters: service '%s', method '%s', params '%s'"
+                        % (service, method, params)
+                    )
                 elif h.is_service_not_found_response(response):
                     err_mess = (
-                        "404 service '%s', method '%s' not found"
+                        "404 service '%s', method '%s', service not found"
                         % (service, method)
                     )
                 else:
