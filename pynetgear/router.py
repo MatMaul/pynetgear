@@ -131,6 +131,123 @@ class Netgear(object):
             verify=False,
         )
 
+    def _try_request(
+        self,
+        message,
+        service,
+        method,
+        params,
+        need_auth=True,
+        check=True,
+        retry=False,
+    ):
+        """Try a API request to the router."""
+        # If we have no cookie (v2) or never called login before (v1)
+        # and we need auth, the request will fail for sure.
+        if need_auth and not self.cookie:
+            if not self.login():
+                return False, None
+        
+        # update cookie in the headers
+        headers = self._get_headers(service, method, need_auth)
+        
+        # Try to send the request
+        try:
+            response = self._post_request(headers, message)
+        except requests.exceptions.SSLError:
+            self.cookie = None
+            if not retry:
+                _LOGGER.debug("SSL error, try again after re-login")
+                return self._try_request(message,service,method,params,need_auth,check,retry=True)
+            _LOGGER.error("SSLError, re-login failed")
+            return False, response
+        except requests.exceptions.ReadTimeout as err:
+            self.cookie = None
+            if not self._logging_in:
+                if not retry:
+                    return self._try_request(message,service,method,params,need_auth,check,retry=True)
+                _LOGGER.error(
+                    "Netgear ReadTimeout, service '%s', method '%s', "
+                    "host %s:%s ssl %s"
+                    % (service, method, self.host, self.port, self.ssl)
+                )
+            else:
+                _LOGGER.debug("ReadTimeout while logging in "
+                              "port %s ssl %s: %s", self.port, self.ssl, err)
+            return False, None
+        except requests.exceptions.RequestException as err:
+            self.cookie = None
+            if not self._logging_in:
+                _LOGGER.exception(
+                    "Error talking to API with service '%s' "
+                    "method '%s' host %s:%s ssl %s"
+                    % (service, method, self.host, self.port, self.ssl)
+                )
+            else:
+                _LOGGER.debug("RequestException while logging in "
+                              "host %s:%s ssl %s: %s",
+                              self.host, self.port, self.ssl, err)
+            return False, None
+
+        # Check for unauthorized respons
+        if need_auth and h.is_unauthorized_response(response):
+            # let's discard the cookie because it probably expired (v2)
+            # or the IP-bound session expired (v1)
+            self.cookie = None
+            if not retry:
+                _LOGGER.debug("Unauthorized response, let's login and retry...")
+                return self._try_request(message,service,method,params,need_auth,check,retry=True)
+            _LOGGER.error("Unauthorized response, re-login failed")
+            return False, response
+
+        success = h.is_valid_response(response)
+        if not success:
+            if h.is_unauthorized_response(response):
+                err_mess = (
+                    "Unauthorized response, while need_auth "
+                    "was false"
+                )
+            elif h.is_service_unavailable_response(response):
+                if not retry:
+                    sleep(3)
+                    return self._try_request(message,service,method,params,need_auth,check,retry=True)
+                err_mess = (
+                    "503 Service Unavailable after retry, "
+                    "the API may be overloaded '%s', '%s'."
+                    % (service, method)
+                )
+            elif h.is_invalid_method_response(response):
+                err_mess = (
+                    "501 service '%s', method '%s', method not found"
+                    % (service, method)
+                )
+            elif h.is_missing_parameter_response(response):
+                err_mess = (
+                    "402 missing paramters: service '%s', method '%s', params '%s'"
+                    % (service, method, params)
+                )
+            elif h.is_service_not_found_response(response):
+                err_mess = (
+                    "404 service '%s', method '%s', service not found"
+                    % (service, method)
+                )
+            else:
+                err_mess = (
+                    "Invalid response to '%s', '%s': %s\n%s\n%s"
+                    % (service,
+                       method,
+                       response.status_code,
+                       str(response.headers),
+                       response.text)
+                )
+        if not success and not self._logging_in:
+            if check:
+                _LOGGER.error(err_mess)
+        elif not success:
+            _LOGGER.debug(err_mess)
+
+        return success, response
+
     def _make_request(
         self,
         service,
@@ -141,14 +258,6 @@ class Netgear(object):
         check=True,
     ):
         """Make an API request to the router."""
-        # If we have no cookie (v2) or never called login before (v1)
-        # and we need auth, the request will fail for sure.
-        if need_auth and not self.cookie:
-            if not self.login():
-                return False, None
-
-        headers = self._get_headers(service, method, need_auth)
-
         if not body:
             if not params:
                 params = ""
@@ -165,106 +274,7 @@ class Netgear(object):
             )
 
         message = c.SOAP_REQUEST.format(session_id=c.SESSION_ID, body=body)
-
-        try:
-            try:
-                response = self._post_request(headers, message)
-            except requests.exceptions.SSLError:
-                _LOGGER.debug(
-                    "SSL error, thread as unauthorized response "
-                    "and try again after re-login"
-                )
-                response = requests.Response()
-                response.status_code = 401
-
-            if need_auth and h.is_unauthorized_response(response):
-                # let's discard the cookie because it probably expired (v2)
-                # or the IP-bound session expired (v1)
-                self.cookie = None
-
-                _LOGGER.debug(
-                    "Unauthorized response, " "let's login and retry..."
-                )
-                if not self.login():
-                    _LOGGER.error("Unauthorized response, re-login failed")
-                    return False, response
-
-                # reset headers with new cookie first and re-try
-                headers = self._get_headers(service, method, need_auth)
-                response = self._post_request(headers, message)
-
-            success = h.is_valid_response(response)
-            if not success:
-                if h.is_unauthorized_response(response):
-                    err_mess = (
-                        "Unauthorized response, "
-                        "after seemingly successful re-login"
-                    )
-                elif h.is_service_unavailable_response(response):
-                    sleep(3)
-                    # try the request one more time
-                    response = self._post_request(headers, message)
-                    success = h.is_valid_response(response)
-                    if not success:
-                        err_mess = (
-                            "503 Service Unavailable after retry, "
-                            "the API may be overloaded '%s', '%s'."
-                            % (service, method)
-                        )
-                elif h.is_invalid_method_response(response):
-                    err_mess = (
-                        "501 service '%s', method '%s', method not found"
-                        % (service, method)
-                    )
-                elif h.is_missing_parameter_response(response):
-                    err_mess = (
-                        "402 missing paramters: service '%s', method '%s', params '%s'"
-                        % (service, method, params)
-                    )
-                elif h.is_service_not_found_response(response):
-                    err_mess = (
-                        "404 service '%s', method '%s', service not found"
-                        % (service, method)
-                    )
-                else:
-                    err_mess = (
-                        "Invalid response to '%s', '%s': %s\n%s\n%s"
-                        % (service,
-                           method,
-                           response.status_code,
-                           str(response.headers),
-                           response.text)
-                    )
-            if not success and not self._logging_in:
-                if check:
-                    _LOGGER.error(err_mess)
-            elif not success:
-                _LOGGER.debug(err_mess)
-
-            return success, response
-        except requests.exceptions.ReadTimeout as err:
-            if not self._logging_in:
-                _LOGGER.error(
-                    "Netgear ReadTimeout, service '%s', method '%s', "
-                    "host %s:%s ssl %s"
-                    % (service, method, self.host, self.port, self.ssl)
-                )
-            else:
-                _LOGGER.debug("ReadTimeout while logging in "
-                              "port %s ssl %s: %s", self.port, self.ssl, err)
-        except requests.exceptions.RequestException as err:
-            if not self._logging_in:
-                _LOGGER.exception(
-                    "Error talking to API with service '%s' "
-                    "method '%s' host %s:%s ssl %s"
-                    % (service, method, self.host, self.port, self.ssl)
-                )
-            else:
-                _LOGGER.debug("RequestException while logging in "
-                              "host %s:%s ssl %s: %s",
-                              self.host, self.port, self.ssl, err)
-        self.cookie = None
-        return False, None
+        return self._try_request(message, service,method,params,need_auth,check)
 
     def config_start(self):
         """
