@@ -78,6 +78,7 @@ GET_ATTACHED_DEVICES_2 = "GetAttachDevice2"
 GET_SYSTEM_INFO = "GetSystemInfo"
 # SET_DEVICE_NAME_ICON_BY_MAC = 'SetDeviceNameIconByMAC'
 # SET_DEVICE_NAME = 'SetNetgearDeviceName'
+GET_ALL_SATELLITES = "GetAllSatellites"
 
 # ---------------------
 # SERVICE_ADVANCED_QOS

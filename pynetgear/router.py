@@ -1221,3 +1221,30 @@ class Netgear(object):
             c.SET_SMART_CONNECT_ENABLED,
             {"NewSmartConnectEnable": value},
         )
+
+    def get_all_satellites(self):
+        """
+        Return list of connected satellites to the router with details.
+
+        Returns None if error occurred.
+        """
+        _LOGGER.debug("Get all satellites")
+
+        success, response = self._make_request(
+            c.SERVICE_DEVICE_INFO, c.GET_ALL_SATELLITES
+        )
+        if not success:
+            return None
+
+        success, satellites_node = h.find_node(
+            response.text, ".//GetAllSatellitesResponse/CurrentSatellites"
+        )
+        if not success:
+            return None
+
+        return list(
+            map(
+                lambda xml_sat: {sat.tag: sat.text for sat in xml_sat},
+                satellites_node.findall("satellite"),
+            )
+        )
