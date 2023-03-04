@@ -568,6 +568,9 @@ class Netgear(object):
             return_node=True,
         )
 
+        if node is None:
+            return None
+
         return [{t.tag: t.text for t in sat} for sat in node]
 
     def get_attached_devices(self):
