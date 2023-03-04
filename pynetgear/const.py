@@ -76,6 +76,7 @@ GET_SUPPORT_FEATURE_LIST_XML = "GetSupportFeatureListXML"
 GET_ATTACHED_DEVICES = "GetAttachDevice"
 GET_ATTACHED_DEVICES_2 = "GetAttachDevice2"
 GET_SYSTEM_INFO = "GetSystemInfo"
+GET_ALL_SATELLITES = "GetAllSatellites"
 # SET_DEVICE_NAME_ICON_BY_MAC = 'SetDeviceNameIconByMAC'
 # SET_DEVICE_NAME = 'SetNetgearDeviceName'
 

@@ -324,6 +324,7 @@ class Netgear(object):
         method,
         parseNode=None,
         parse_text=lambda text: text,
+        return_node=False,
         check=True,
     ):
         """Get information using a service and method from the router."""
@@ -344,6 +345,9 @@ class Netgear(object):
         if not success:
             _LOGGER.debug("Could not parse response for %s", method)
             return None
+
+        if return_node:
+            return node
 
         return {t.tag: parse_text(t.text) for t in node}
 
@@ -551,6 +555,20 @@ class Netgear(object):
 
         self._info = response
         return self._info
+
+    def get_satellites(self):
+        """
+        Return list of connected satellites to the router with details.
+        Returns None if error occurred.
+        """
+        node = self._get(
+            c.SERVICE_DEVICE_INFO,
+            c.GET_ALL_SATELLITES,
+            parseNode = ".//GetAllSatellitesResponse/CurrentSatellites",
+            return_node=True,
+        )
+
+        return [{t.tag: t.text for t in sat} for sat in node]
 
     def get_attached_devices(self):
         """
