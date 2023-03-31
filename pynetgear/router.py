@@ -613,7 +613,9 @@ class Netgear(object):
         if len(entries) > 1:
             entry_count = h.convert(entries.pop(0), int)
 
-        if entry_count is not None and entry_count != len(entries):
+        # Some devices like MR60 regulary return an entry_count too small
+        # Only log when entry_count is too big
+        if entry_count is not None and entry_count > len(entries):
             _LOGGER.info(
                 "Number of devices should be: %d but is: %d",
                 entry_count,
