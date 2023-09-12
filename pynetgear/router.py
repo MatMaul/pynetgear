@@ -594,6 +594,10 @@ class Netgear(object):
         )
         if not success:
             return None
+        if node.text is None:
+            _LOGGER.error("Error parsing GetAttachDeviceResponse")
+            _LOGGER.debug(response.text)
+            return None
 
         devices = []
 
