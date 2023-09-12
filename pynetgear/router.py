@@ -238,6 +238,20 @@ class Netgear(object):
                     "404 service '%s', method '%s', service not found"
                     % (service, method)
                 )
+            elif h.is_incomplete_response(response):
+                if not retry:
+                    sleep(5)
+                    return self._try_request(message, service, method, params,
+                                             need_auth, check, retry=True)
+                err_mess = (
+                    "Incomplete response to service '%s', method '%s', "
+                    "<ResponseCode> missing: %s\n%s\n%s"
+                    % (service,
+                       method, 
+                       response.status_code,
+                       str(response.headers),
+                       response.text)
+                )
             else:
                 err_mess = (
                     "Invalid response to '%s', '%s': %s\n%s\n%s"
