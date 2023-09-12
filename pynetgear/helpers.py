@@ -112,8 +112,21 @@ def xml_get(e, name):
     """
     r = e.find(name)
     if r is not None:
+        if r.text in ["unknown", "<unknown>", "--"]:
+            return None
         return r.text
     return None
+
+
+def dev_info_get(value):
+    """
+    Returns the value of the piece of device info.
+
+    Returns None if the value is invalid
+    """
+    if value in ["unknown", "<unknown>", "--"]:
+        return None
+    return value
 
 
 def get_soap_headers(service, method):
@@ -170,6 +183,8 @@ def is_incomplete_response(resp):
 
 def convert(value, to_type, default=None):
     """Convert value to to_type, returns default if fails."""
+    if value in ["unknown", "<unknown>", "--"]:
+        return default
     try:
         return default if value is None else to_type(value)
     except ValueError:

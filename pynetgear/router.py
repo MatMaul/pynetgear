@@ -655,21 +655,21 @@ class Netgear(object):
             name = None
 
             if len(info) >= 8:
-                allow_or_block = info[7]
+                allow_or_block = h.dev_info_get(info[7])
             if len(info) >= 7:
-                link_type = info[4]
+                link_type = h.dev_info_get(info[4])
                 link_rate = h.convert(info[5], int)
                 signal = h.convert(info[6], int)
             if len(info) >= 4:
-                mac = info[3]
+                mac = h.dev_info_get(info[3])
             if len(info) >= 3:
-                name = info[2]
+                name = h.dev_info_get(info[2])
 
             if len(info) < 2:
                 _LOGGER.warning("Unexpected entry: %s", info)
                 continue
 
-            ipv4 = info[1]
+            ipv4 = h.dev_info_get(info[1])
 
             devices.append(
                 Device(
