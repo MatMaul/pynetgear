@@ -247,7 +247,7 @@ class Netgear(object):
                     "Incomplete response to service '%s', method '%s', "
                     "<ResponseCode> missing: %s\n%s\n%s"
                     % (service,
-                       method, 
+                       method,
                        response.status_code,
                        str(response.headers),
                        response.text)
@@ -578,7 +578,7 @@ class Netgear(object):
         node = self._get(
             c.SERVICE_DEVICE_INFO,
             c.GET_ALL_SATELLITES,
-            parseNode = ".//GetAllSatellitesResponse/CurrentSatellites",
+            parseNode=".//GetAllSatellitesResponse/CurrentSatellites",
             return_node=True,
         )
 

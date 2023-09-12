@@ -177,9 +177,11 @@ def is_service_not_found_response(resp):
     return (resp.status_code == 404 or
             "<ResponseCode>404</ResponseCode>" in resp.text)
 
+
 def is_incomplete_response(resp):
     return (resp.status_code == 200 and
             "<ResponseCode>" not in resp.text)
+
 
 def convert(value, to_type, default=None):
     """Convert value to to_type, returns default if fails."""
